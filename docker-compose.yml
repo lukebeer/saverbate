@@ -9,7 +9,24 @@ services:
       - 4222
     ports:
       - "10222:4222"
+    networks:
+      - default
+      - backend
     command: -D --config /configs/nats-server.conf
+    restart: "unless-stopped"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-redis:
+    image: redis
+    expose:
+      - 6379
+    networks:
+      - default
+      - backend
     restart: "unless-stopped"
     logging:
       driver: "json-file"
@@ -81,6 +98,49 @@ services:
       - saverbate-db
       - saverbate-nats
     restart: "unless-stopped"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile-py
+      args:
+        SERVICE_NAME: downloader
+    environment:
+      POSTGRES_USER: ${SAVERBATE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${SAVERBATE_POSTGRES_PASSWORD}
+      POSTGRES_DB: saverbate_records
+    networks:
+      - default
+      - backend
+    depends_on:
+      - saverbate-db
+      - saverbate-nats
+    restart: "unless-stopped"
+    command: /app/service --natsAddress nats://saverbate-nats:4222
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-mailer:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: mailer
+    networks:
+      - default
+      - backend
+    depends_on:
+      - saverbate-redis
+      - saverbate-nats
+    restart: "unless-stopped"
+    command: /app/service --natsAddress nats://saverbate-nats:4222
     logging:
       driver: "json-file"
       options:

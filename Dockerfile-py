@@ -1,0 +1,35 @@
+FROM golang:1.14.3-buster AS compile
+
+WORKDIR /app
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+COPY ./ ./
+
+ARG SERVICE_NAME
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/service cmd/${SERVICE_NAME}/main.go
+
+FROM python:3.8.6-buster
+
+WORKDIR /app
+
+RUN apt-get update -yq && \
+  apt-get install -yq \
+    tini \
+    curl \
+    git
+
+ENTRYPOINT ["tini", "--"]
+
+COPY --from=compile /app/service /app/
+
+RUN cd /tmp && \
+  git clone https://github.com/isqad/streamlink
+
+RUN cd /tmp/streamlink && \
+  python setup.py install
+
+RUN streamlink --version
