@@ -1,6 +1,22 @@
 version: '3.2'
 
 services:
+  saverbate-nats:
+    image: nats
+    volumes:
+      - ./configs/nats:/configs
+    expose:
+      - 4222
+    ports:
+      - "10222:4222"
+    command: -D --config /configs/nats-server.conf
+    restart: "unless-stopped"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
   saverbate-pg:
     image: postgres:11-alpine
     environment:
@@ -39,6 +55,31 @@ services:
     networks:
       - default
       - backend
+    restart: "unless-stopped"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-frontend:
+    build:
+      context: .
+      args:
+        SERVICE_NAME: frontend
+    environment:
+      POSTGRES_USER: ${SAVERBATE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${SAVERBATE_POSTGRES_PASSWORD}
+      POSTGRES_DB: saverbate_records
+    expose:
+      - "80"
+    networks:
+      - default
+      - frontend
+      - backend
+    depends_on:
+      - saverbate-db
+      - saverbate-nats
     restart: "unless-stopped"
     logging:
       driver: "json-file"
