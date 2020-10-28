@@ -139,6 +139,7 @@ services:
     depends_on:
       - saverbate-redis
       - saverbate-nats
+      - saverbate-db
     restart: "unless-stopped"
     command: /app/service --natsAddress nats://saverbate-nats:4222
     logging:
