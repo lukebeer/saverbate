@@ -168,6 +168,26 @@ services:
         max-size: "1m"
         max-file: "2"
 
+  saverbate-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile-parsers
+      args:
+        SERVICE_NAME: scraper
+    networks:
+      - default
+      - backend
+    depends_on:
+      - saverbate-pg
+      - saverbate-redis
+    restart: "unless-stopped"
+    command: /parsers/service --pydbconn pq://${SAVERBATE_POSTGRES_USER}:${SAVERBATE_POSTGRES_PASSWORD}@saverbate-pg:5432/saverbate_records
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
 volumes:
   pg-data:
     driver: local
