@@ -5,6 +5,11 @@ from .base import Base
 
 class BaseCamsCrawler(Base):
     SLASHES_RE = re.compile(r"^\/([^/]+)\/$")
+    PAGE_RE = re.compile(r"\/\?page=(\d+)$")
+    """
+    Maximum page to crawl
+    """
+    MAX_PAGE = 5
 
     name = 'female_cams_crawler'
 
@@ -28,6 +33,15 @@ class BaseCamsCrawler(Base):
                 }
 
         for next_page in response.css('a.endless_page_link'):
+            href = next_page.attrib['href']
+
+            if href != '/':
+                page_num = int(self.PAGE_RE.sub(r"\1", href))
+                if page_num > self.MAX_PAGE:
+                    continue
+            else:
+                continue
+
             yield response.follow(next_page, self.parse_cams)
 
     def gender(self):
