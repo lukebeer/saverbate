@@ -62,7 +62,7 @@ services:
     environment:
       DATABASE_URL: postgres://${SAVERBATE_POSTGRES_USER}:${SAVERBATE_POSTGRES_PASSWORD}@saverbate-pg/saverbate_records
       POOL_MODE: session
-      MAX_CLIENT_CONN: 100
+      MAX_CLIENT_CONN: 90
     expose:
       - "5432"
     ports:
@@ -107,9 +107,7 @@ services:
   saverbate-downloader:
     build:
       context: .
-      dockerfile: Dockerfile-py
-      args:
-        SERVICE_NAME: downloader
+      dockerfile: Dockerfile-downloader
     environment:
       POSTGRES_USER: ${SAVERBATE_POSTGRES_USER}
       POSTGRES_PASSWORD: ${SAVERBATE_POSTGRES_PASSWORD}
@@ -122,6 +120,8 @@ services:
       - saverbate-nats
     restart: "unless-stopped"
     command: /app/service --natsAddress nats://saverbate-nats:4222
+    volumes:
+      - ./downloads:/app/downloads
     logging:
       driver: "json-file"
       options:
@@ -142,6 +142,26 @@ services:
       - saverbate-db
     restart: "unless-stopped"
     command: /app/service --natsAddress nats://saverbate-nats:4222
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile-parsers
+      args:
+        SERVICE_NAME: crawler
+    networks:
+      - default
+      - backend
+    depends_on:
+      - saverbate-pg
+      - saverbate-redis
+    restart: "unless-stopped"
+    command: /parsers/service --pydbconn pq://${SAVERBATE_POSTGRES_USER}:${SAVERBATE_POSTGRES_PASSWORD}@saverbate-pg:5432/saverbate_records
     logging:
       driver: "json-file"
       options:

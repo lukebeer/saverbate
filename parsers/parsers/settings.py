@@ -1,4 +1,4 @@
-# Scrapy settings for project project
+# Scrapy settings for project parsers
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,10 +7,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'project'
+BOT_NAME = 'parsers'
 
-SPIDER_MODULES = ['project.spiders']
-NEWSPIDER_MODULE = 'project.spiders'
+SPIDER_MODULES = ['parsers.spiders']
+NEWSPIDER_MODULE = 'parsers.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
