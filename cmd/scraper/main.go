@@ -30,7 +30,7 @@ func main() {
 	ctx := crawler.New(rs)
 
 	c := cron.New()
-	c.AddFunc("0 12 * * *", func() { ctx.Crawl("cam_scrapper") })
+	c.AddFunc("CRON_TZ=Asia/Yekaterinburg 20 17 * * *", func() { ctx.Crawl("cam_scrapper") })
 	c.Start()
 
 	// Wait for a signal to quit:

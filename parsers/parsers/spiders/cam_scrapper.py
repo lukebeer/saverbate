@@ -5,8 +5,8 @@ from .base import Base
 
 class CamScrapper(Base):
     CURSOR_BATCH_SIZE = 50
-    CURSOR_ID = 'cam_scapper_cursor'
-    name = 'cam_scapper'
+    CURSOR_ID = 'cam_scrapper_cursor'
+    name = 'cam_scrapper'
 
     def start_requests(self):
         with postgresql.open(self.PG_CONN_URI) as db:
