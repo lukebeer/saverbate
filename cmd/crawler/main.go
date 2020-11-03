@@ -16,10 +16,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	concurrency = 1
-)
-
 func main() {
 	flag.String("pydbconn", "pq://postgres:qwerty@saverbate-pg:5432/saverbate_records", "Database connection string")
 	flag.String("redisAddress", "saverbate-redis:6379", "Address to redis server")
@@ -34,10 +30,11 @@ func main() {
 	ctx := crawler.New(rs)
 
 	c := cron.New()
-	c.AddFunc("0 */2 * * *", func() { ctx.Crawl("couple_cams_crawler") })
-	c.AddFunc("0 * * * *", func() { ctx.Crawl("female_cams_crawler") })
-	c.AddFunc("0 */3 * * *", func() { ctx.Crawl("trans_cams_crawler") })
-	c.AddFunc("0 12 * * *", func() { ctx.Crawl("cam_scrapper") })
+	c.AddFunc("0 * * * *", func() {
+		ctx.Crawl("female_cams_crawler")
+		ctx.Crawl("couple_cams_crawler")
+		ctx.Crawl("trans_cams_crawler")
+	})
 	c.Start()
 
 	// Wait for a signal to quit:
