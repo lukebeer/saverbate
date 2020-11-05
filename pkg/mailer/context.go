@@ -1,6 +1,7 @@
 package mailer
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
 	"github.com/gocraft/work"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/viper"
 )
 
@@ -32,7 +34,6 @@ var (
 // CheckEmail connects to imap server and check new emails
 func (ctx *Context) CheckEmail(job *work.Job) error {
 	performersUnique := make(map[string]struct{})
-	performers := []string{}
 
 	log.Println("Connecting to server...")
 
@@ -153,15 +154,41 @@ func (ctx *Context) CheckEmail(job *work.Job) error {
 
 	log.Println("Done!")
 
+	log.Println("Connecting to NATS...")
+	// NATS
+	nc, err := nats.Connect(viper.GetString("natsAddress"), nats.NoEcho())
+	if err != nil {
+		log.Printf("Error: %v", err)
+		return err
+	}
+	defer nc.Drain()
+
+	if len(performersUnique) == 0 {
+		log.Println("Nothing here...")
+		return nil
+	}
+
 	for performer := range performersUnique {
 		name := performerNameRe.FindStringSubmatch(performer)
 		if len(name) == 0 {
 			continue
 		}
-		performers = append(performers, name[1])
-	}
 
-	log.Println("Performers: ", performers)
+		message, err := json.Marshal(struct {
+			Name string `json:"performer_name"`
+		}{
+			Name: name[1],
+		})
+		if err != nil {
+			log.Printf("marshaling message failed: %v\n", err)
+			return nil
+		}
+
+		if err := nc.Publish("downloading", message); err != nil {
+			log.Printf("Failed to publush message: %v", err)
+			return nil
+		}
+	}
 
 	return nil
 }

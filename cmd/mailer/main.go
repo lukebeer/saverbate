@@ -18,7 +18,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const concurrency = 1
+const (
+	concurrency = 1
+	serviceName = "mailer"
+)
 
 // TODO: Do not automatically retry if got any error
 func main() {
@@ -35,7 +38,7 @@ func main() {
 	}
 
 	// Check for free farm
-	f, err := farm.FindFree(db)
+	f, err := farm.FindFree(db, serviceName)
 	if err != nil {
 		log.Fatalf("Failed to retrieve free farm: %v\n", err)
 	}
@@ -53,24 +56,28 @@ func main() {
 	}
 
 	pool := work.NewWorkerPool(mailer.Context{}, concurrency, mailer.NamespaceDownloads, redisPool)
-	pool.PeriodicallyEnqueue("0 */15 * * * *", mailer.JobName)
+	pool.PeriodicallyEnqueue("0 */5 * * * *", mailer.JobName)
 
-	pool.Job(mailer.JobName, (*mailer.Context).CheckEmail)
+	opts := work.JobOptions{
+		SkipDead: true,
+	}
+	pool.JobWithOptions(mailer.JobName, opts, (*mailer.Context).CheckEmail)
 
 	// Start processing jobs
 	pool.Start()
 
 	// Wait for a signal to quit:
 	signalChan := make(chan os.Signal, 1)
-	// SIGTERM called when Ctrl+C is executed
+	// SIGTERM is called when Ctrl+C was pressed
 	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-signalChan
 
 	// Stop the pool
 	pool.Stop()
 
-	err = farm.Release(db, viper.GetString("user"))
+	err = farm.Release(db, serviceName, viper.GetString("user"))
 	if err != nil {
 		log.Fatalf("Failed to release farm: %v\n", err)
 	}
+	db.Close()
 }
