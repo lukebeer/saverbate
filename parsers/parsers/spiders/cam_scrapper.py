@@ -16,7 +16,7 @@ class CamScrapper(Base):
               "language IS NULL OR "
               "followers IS NULL OR "
               "location IS NULL OR "
-              "age IS NULL"
+              "age IS NULL ORDER BY created_at DESC LIMIT 1000"
             )
 
             c = db.cursor_from_id(self.CURSOR_ID)
