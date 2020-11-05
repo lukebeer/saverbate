@@ -5,7 +5,7 @@ from .base import Base
 
 class BaseCamsCrawler(Base):
     SLASHES_RE = re.compile(r"^\/([^/]+)\/$")
-    PAGE_RE = re.compile(r"^\/\?page=(\d+)$")
+    PAGE_RE = re.compile(r"^\/[^\/]+\/\?page=(\d+)$")
     """
     Maximum page to crawl
     """
