@@ -30,7 +30,7 @@ func main() {
 	ctx := crawler.New(rs)
 
 	c := cron.New()
-	c.AddFunc("CRON_TZ=Asia/Yekaterinburg 20 17 * * *", func() { ctx.Crawl("cam_scrapper") })
+	c.AddFunc("0 */6 * * *", func() { ctx.Crawl("cam_scrapper") })
 	c.Start()
 
 	// Wait for a signal to quit:
@@ -40,4 +40,5 @@ func main() {
 	<-signalChan
 
 	c.Stop()
+	ctx.Close()
 }

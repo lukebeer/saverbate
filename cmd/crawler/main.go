@@ -30,7 +30,7 @@ func main() {
 	ctx := crawler.New(rs)
 
 	c := cron.New()
-	c.AddFunc("0 * * * *", func() {
+	c.AddFunc("35 * * * *", func() {
 		ctx.Crawl("female_cams_crawler")
 		ctx.Crawl("couple_cams_crawler")
 		ctx.Crawl("trans_cams_crawler")
@@ -44,4 +44,5 @@ func main() {
 	<-signalChan
 
 	c.Stop()
+	ctx.Close()
 }

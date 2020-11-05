@@ -72,6 +72,12 @@ func (ctx *Context) Crawl(name string) {
 	cmd.Wait()
 }
 
+func (ctx *Context) Close() {
+	for _, mutex := range ctx.mutexes {
+		mutex.Unlock()
+	}
+}
+
 func copyOutput(r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
