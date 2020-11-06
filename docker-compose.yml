@@ -57,6 +57,34 @@ services:
         max-size: "1m"
         max-file: "2"
 
+  saverbate-pg-backup:
+    build:
+      context: ./deployments/postgres-backup-s3
+    image: saverbate/postgres-backup-s3:latest
+    depends_on:
+      - saverbate-pg
+    restart: "unless-stopped"
+    networks:
+      - default
+      - backend
+    environment:
+      POSTGRES_HOST: saverbate-pg
+      POSTGRES_USER: ${SAVERBATE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${SAVERBATE_POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: saverbate_records
+      SCHEDULE: '@daily'
+      S3_REGION: ru-msk
+      S3_ACCESS_KEY_ID: ${SAVERBATE_MAILRU_S3_ID}
+      S3_SECRET_ACCESS_KEY: ${SAVERBATE_MAILRU_S3_SECRET}
+      S3_BUCKET: ${SAVERBATE_MAILRU_BACKUP_BACKET}
+      S3_PREFIX: backup
+      S3_ENDPOINT: https://hb.bizmrg.com
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
   saverbate-db:
     image: edoburu/pgbouncer
     environment:
