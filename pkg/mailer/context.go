@@ -10,7 +10,6 @@ import (
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
-	"github.com/gocraft/work"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/viper"
 )
@@ -24,46 +23,48 @@ const (
 )
 
 // Context is context of mailer service
-type Context struct{}
+type Context struct {
+	nc *nats.Conn
+}
 
 var (
 	performersLinkRe = regexp.MustCompile(`(https://chaturbate\.com\/[^\/]{3,}/)(?:\n|\]|<||\s|$)`)
 	performerNameRe  = regexp.MustCompile(`https://chaturbate\.com\/([^\/]{3,})\/`)
 )
 
+func New(nc *nats.Conn) *Context {
+	return &Context{nc: nc}
+}
+
 // CheckEmail connects to imap server and check new emails
-func (ctx *Context) CheckEmail(job *work.Job) error {
+func (ctx *Context) CheckEmail() error {
+	var seqset *imap.SeqSet
+
 	performersUnique := make(map[string]struct{})
 
-	log.Println("Connecting to server...")
+	log.Println("Connecting to IMAP server...")
 
 	// Connect to server
 	c, err := client.DialTLS(imapServer, nil)
 	if err != nil {
-		log.Printf("Error: %v", err)
 		return err
 	}
-
-	// Don't forget to logout
-	defer c.Logout()
 
 	// Login
 	if err := c.Login(viper.GetString("user"), viper.GetString("password")); err != nil {
-		log.Printf("Error: %v", err)
 		return err
 	}
-	log.Println("Logged in")
+
+	defer c.Logout()
 
 	// Select INBOX
 	mbox, err := c.Select("INBOX", false)
 	if err != nil {
-		log.Printf("Error: %v", err)
 		return err
 	}
-	log.Println("Flags for INBOX:", mbox.Flags)
 
 	if mbox.Messages == 0 {
-		log.Printf("Empty mailbox...Exit")
+		log.Println("Empty mailbox...Exit")
 		return nil
 	}
 	from := uint32(1)
@@ -72,7 +73,7 @@ func (ctx *Context) CheckEmail(job *work.Job) error {
 		// We're using unsigned integers here, only substract if the result is > 0
 		from = mbox.Messages - 49
 	}
-	seqset := new(imap.SeqSet)
+	seqset = new(imap.SeqSet)
 	seqset.AddRange(from, to)
 
 	var section imap.BodySectionName
@@ -134,6 +135,7 @@ func (ctx *Context) CheckEmail(job *work.Job) error {
 					}
 
 					for _, matching := range matches {
+						log.Println(matching[1])
 						if _, ok := performersUnique[matching[1]]; !ok {
 							performersUnique[matching[1]] = struct{}{}
 						}
@@ -148,25 +150,22 @@ func (ctx *Context) CheckEmail(job *work.Job) error {
 	}
 
 	if err := <-done; err != nil {
-		log.Printf("Error: %v", err)
+		return err
+	}
+
+	log.Println("Clean up...")
+
+	// Delete messages
+	storeItems := imap.FormatFlagsOp(imap.AddFlags, false)
+
+	if err := c.Store(seqset, storeItems, []interface{}{imap.DeletedFlag}, nil); err != nil {
+		return err
+	}
+	if err := c.Expunge(nil); err != nil {
 		return err
 	}
 
 	log.Println("Done!")
-
-	log.Println("Connecting to NATS...")
-	// NATS
-	nc, err := nats.Connect(viper.GetString("natsAddress"), nats.NoEcho())
-	if err != nil {
-		log.Printf("Error: %v", err)
-		return err
-	}
-	defer nc.Drain()
-
-	if len(performersUnique) == 0 {
-		log.Println("Nothing here...")
-		return nil
-	}
 
 	for performer := range performersUnique {
 		name := performerNameRe.FindStringSubmatch(performer)
@@ -180,13 +179,11 @@ func (ctx *Context) CheckEmail(job *work.Job) error {
 			Name: name[1],
 		})
 		if err != nil {
-			log.Printf("marshaling message failed: %v\n", err)
-			return nil
+			return err
 		}
 
-		if err := nc.Publish("downloading", message); err != nil {
-			log.Printf("Failed to publush message: %v", err)
-			return nil
+		if err := ctx.nc.Publish("downloading", message); err != nil {
+			return err
 		}
 	}
 

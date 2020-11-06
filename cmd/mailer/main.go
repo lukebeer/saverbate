@@ -9,28 +9,34 @@ import (
 	"saverbate/pkg/farm"
 	"saverbate/pkg/mailer"
 
-	"github.com/gocraft/work"
-	"github.com/gomodule/redigo/redis"
 	"github.com/jmoiron/sqlx"
+	"github.com/nats-io/nats.go"
+	"github.com/robfig/cron/v3"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	concurrency = 1
-	serviceName = "mailer"
-)
+const serviceName = "mailer"
 
-// TODO: Do not automatically retry if got any error
 func main() {
+	log.Println("Start mailer service...")
+
 	flag.String("dbconn", "postgres://postgres:qwerty@saverbate-db:5432/saverbate_records?sslmode=disable", "Database connection string")
 	flag.String("redisAddress", "saverbate-redis:6379", "Address to redis server")
 	flag.String("natsAddress", "nats://saverbate-nats:4222", "Address to connect to NATS server")
 	flag.Parse()
 
 	viper.BindPFlags(flag.CommandLine)
+
+	log.Println("Connecting to NATS...")
+	// NATS
+	nc, err := nats.Connect(viper.GetString("natsAddress"), nats.NoEcho())
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	defer nc.Drain()
 
 	db, err := sqlx.Connect("postgres", viper.GetString("dbconn"))
 	if err != nil {
@@ -45,26 +51,15 @@ func main() {
 	viper.Set("user", f.Name)
 	viper.Set("password", f.Password)
 
-	// Make a redis pool
-	redisPool := &redis.Pool{
-		MaxActive: 5,
-		MaxIdle:   5,
-		Wait:      true,
-		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", viper.GetString("redisAddress"))
-		},
-	}
+	m := mailer.New(nc)
 
-	pool := work.NewWorkerPool(mailer.Context{}, concurrency, mailer.NamespaceDownloads, redisPool)
-	pool.PeriodicallyEnqueue("0 */5 * * * *", mailer.JobName)
-
-	opts := work.JobOptions{
-		SkipDead: true,
-	}
-	pool.JobWithOptions(mailer.JobName, opts, (*mailer.Context).CheckEmail)
-
-	// Start processing jobs
-	pool.Start()
+	c := cron.New()
+	c.AddFunc("*/5 * * * *", func() {
+		if err := m.CheckEmail(); err != nil {
+			log.Printf("ERROR: %v", err)
+		}
+	})
+	c.Start()
 
 	// Wait for a signal to quit:
 	signalChan := make(chan os.Signal, 1)
@@ -72,12 +67,11 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-signalChan
 
-	// Stop the pool
-	pool.Stop()
+	c.Stop()
 
 	err = farm.Release(db, serviceName, viper.GetString("user"))
 	if err != nil {
-		log.Fatalf("Failed to release farm: %v\n", err)
+		log.Printf("Failed to release farm: %v\n", err)
 	}
 	db.Close()
 }
