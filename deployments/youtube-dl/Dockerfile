@@ -13,9 +13,4 @@ RUN apt-get update -yq && \
 
 ENTRYPOINT ["tini", "--"]
 
-RUN cd /tmp && \
-  git clone https://github.com/isqad/streamlink && \
-  cd /tmp/streamlink && \
-  python setup.py install && \
-  streamlink --version && \
-  ffmpeg -version
+RUN pip install youtube-dl

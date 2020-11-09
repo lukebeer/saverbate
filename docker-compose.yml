@@ -163,13 +163,19 @@ services:
         SERVICE_NAME: mailer
     networks:
       - default
+      - frontend
       - backend
     depends_on:
       - saverbate-redis
       - saverbate-nats
       - saverbate-db
     restart: "unless-stopped"
-    command: /app/service --natsAddress nats://saverbate-nats:4222
+    command: /app/service --natsAddress nats://saverbate-nats:4222 --listen 0.0.0.0:80
+    expose:
+      - "80"
+    environment:
+      - VIRTUAL_HOST=mailer.saverbate.$DOCKER_TLD
+      - VIRTUAL_PATH=/
     logging:
       driver: "json-file"
       options:
@@ -210,6 +216,23 @@ services:
       - saverbate-redis
     restart: "unless-stopped"
     command: /parsers/service --pydbconn pq://${SAVERBATE_POSTGRES_USER}:${SAVERBATE_POSTGRES_PASSWORD}@saverbate-pg:5432/saverbate_records
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-vod:
+    image: nytimes/nginx-vod-module
+    restart: "unless-stopped"
+    networks:
+      - default
+      - frontend
+    ports:
+      - "3005:80"
+    volumes:
+      - ./downloads:/opt/static/videos
+      - ./configs/nginx-vod/nginx.conf:/usr/local/nginx/conf/nginx.conf
     logging:
       driver: "json-file"
       options:

@@ -10,7 +10,7 @@ COPY ./ ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/service cmd/downloader/main.go
 
-FROM saverbate/streamlink:0.9.0 AS release
+FROM saverbate/youtube-dl AS release
 
 WORKDIR /app
 

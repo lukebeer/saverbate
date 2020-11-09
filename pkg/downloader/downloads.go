@@ -50,11 +50,15 @@ func (d *Downloads) Start(name string) {
 	}()
 
 	cmd := exec.Command(
-		"streamlink",
+		"youtube-dl",
+		"--no-color",
+		"--no-call-home",
+		"--no-progress",
+		"--user-agent", `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36`,
+		"--write-thumbnail",
+		"-f", "best[height<=720]",
+		"--output", "/app/downloads/"+name+"/%(title)s.%(ext)s",
 		"https://chaturbate.com/"+name+"/",
-		"best",
-		"-o", "/app/downloads/"+name+".mp4", // TODO: add timestamp
-		"--loglevel", "debug",
 	)
 
 	stdout, err := cmd.StdoutPipe()
