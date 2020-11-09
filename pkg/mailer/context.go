@@ -11,6 +11,7 @@ import (
 	"github.com/emersion/go-imap/client"
 	"github.com/emersion/go-message/mail"
 	"github.com/nats-io/nats.go"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/viper"
 )
 
@@ -24,7 +25,8 @@ const (
 
 // Context is context of mailer service
 type Context struct {
-	nc *nats.Conn
+	nc      *nats.Conn
+	Metrics Metrics
 }
 
 var (
@@ -35,7 +37,16 @@ var (
 )
 
 func New(nc *nats.Conn) *Context {
-	return &Context{nc: nc}
+	c := &Context{nc: nc}
+	c.Metrics.parsedPerformers = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "saverbate_mailer_parsed_performers_total",
+			Help: "The total number of processed from mailbox performers who online",
+		},
+		[]string{"status"},
+	)
+	prometheus.MustRegister(c.Metrics.parsedPerformers)
+	return c
 }
 
 // CheckEmail connects to imap server and check new emails
@@ -106,6 +117,8 @@ func (ctx *Context) CheckEmail() error {
 				break
 			}
 
+			ctx.Metrics.parsedPerformers.WithLabelValues("messages_got").Inc()
+
 			header := mr.Header
 			if subject, err := header.Subject(); err == nil {
 				matched := subjectRe.MatchString(subject)
@@ -113,6 +126,8 @@ func (ctx *Context) CheckEmail() error {
 					break
 				}
 			}
+
+			ctx.Metrics.parsedPerformers.WithLabelValues("messages_matched").Inc()
 
 			// Process each message's part
 			for {
@@ -133,9 +148,9 @@ func (ctx *Context) CheckEmail() error {
 					matches := performersLinkRe.FindAllStringSubmatch(strBody, -1)
 
 					for _, matching := range matches {
-						log.Println(matching[1])
 						if _, ok := performersUnique[matching[1]]; !ok {
 							performersUnique[matching[1]] = struct{}{}
+							ctx.Metrics.parsedPerformers.WithLabelValues("performers_parsed").Inc()
 						}
 					}
 
@@ -143,9 +158,9 @@ func (ctx *Context) CheckEmail() error {
 
 					for _, matching := range matches {
 						m := "https://chaturbate.com/" + matching[1] + "/"
-						log.Println(m)
 						if _, ok := performersUnique[m]; !ok {
 							performersUnique[m] = struct{}{}
+							ctx.Metrics.parsedPerformers.WithLabelValues("performers_parsed").Inc()
 						}
 					}
 				case *mail.AttachmentHeader:
