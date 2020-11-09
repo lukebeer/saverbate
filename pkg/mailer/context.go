@@ -28,8 +28,10 @@ type Context struct {
 }
 
 var (
-	performersLinkRe = regexp.MustCompile(`(https://chaturbate\.com\/[^\/]{3,}/)(?:\n|\]|<||\s|$)`)
-	performerNameRe  = regexp.MustCompile(`https://chaturbate\.com\/([^\/]{3,})\/`)
+	performersLinkRe    = regexp.MustCompile(`(https:\/\/chaturbate\.com\/[^\/]{3,}/)(?:\n|\]|<||\s|$)`)
+	performerIsOnlineRe = regexp.MustCompile(`strong>([^\s]{3,}) is now online`)
+	performerNameRe     = regexp.MustCompile(`https:\/\/chaturbate\.com\/([^\/]{3,})\/`)
+	subjectRe           = regexp.MustCompile(`(?:someone you follow is chaturbating|broadcasters you follow are chaturbating)$`)
 )
 
 func New(nc *nats.Conn) *Context {
@@ -106,10 +108,7 @@ func (ctx *Context) CheckEmail() error {
 
 			header := mr.Header
 			if subject, err := header.Subject(); err == nil {
-				matched, _ := regexp.MatchString(
-					`(?:someone you follow is chaturbating|broadcasters you follow are chaturbating)$`,
-					subject,
-				)
+				matched := subjectRe.MatchString(subject)
 				if !matched {
 					break
 				}
@@ -129,15 +128,24 @@ func (ctx *Context) CheckEmail() error {
 				case *mail.InlineHeader:
 					// This is the message's text (can be plain-text or HTML)
 					b, _ := ioutil.ReadAll(p.Body)
-					matches := performersLinkRe.FindAllStringSubmatch(string(b), -1)
-					if len(matches) == 0 {
-						break
-					}
+					strBody := string(b)
+
+					matches := performersLinkRe.FindAllStringSubmatch(strBody, -1)
 
 					for _, matching := range matches {
 						log.Println(matching[1])
 						if _, ok := performersUnique[matching[1]]; !ok {
 							performersUnique[matching[1]] = struct{}{}
+						}
+					}
+
+					matches = performerIsOnlineRe.FindAllStringSubmatch(strBody, -1)
+
+					for _, matching := range matches {
+						m := "https://chaturbate.com/" + matching[1] + "/"
+						log.Println(m)
+						if _, ok := performersUnique[m]; !ok {
+							performersUnique[m] = struct{}{}
 						}
 					}
 				case *mail.AttachmentHeader:
@@ -156,7 +164,7 @@ func (ctx *Context) CheckEmail() error {
 	log.Println("Clean up...")
 
 	// Delete messages
-	storeItems := imap.FormatFlagsOp(imap.AddFlags, false)
+	storeItems := imap.FormatFlagsOp(imap.AddFlags, true)
 
 	if err := c.Store(seqset, storeItems, []interface{}{imap.DeletedFlag}, nil); err != nil {
 		return err
