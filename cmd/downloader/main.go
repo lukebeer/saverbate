@@ -39,8 +39,6 @@ func main() {
 	})
 	redsyncPool := goredis.NewPool(client)
 	rs := redsync.New(redsyncPool)
-	// Initialize downloads
-	dwnl := downloader.New(rs)
 
 	db, err := sqlx.Connect("postgres", viper.GetString("dbconn"))
 	if err != nil {
@@ -52,6 +50,9 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	// Initialize downloads
+	dwnl := downloader.New(rs, db)
 
 	// Subscribe
 	if _, err := nc.QueueSubscribe("downloading", "download", func(m *nats.Msg) {
