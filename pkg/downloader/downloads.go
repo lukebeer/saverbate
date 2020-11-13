@@ -20,25 +20,46 @@ const (
 	userAgent = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36`
 )
 
+// Downloads handles downloading
 type Downloads struct {
-	rs         *redsync.Redsync
+	rs *redsync.Redsync
+	db *sqlx.DB
+	nc *nats.Conn
+
 	mutexes    map[string]*redsync.Mutex
 	guardMutex *sync.Mutex
-	db         *sqlx.DB
-	nc         *nats.Conn
+
+	activeCmds      map[string]*exec.Cmd
+	guardActiveCmds *sync.Mutex
+
+	performers chan string
 }
 
+// New creates new instance of Downloads
 func New(rs *redsync.Redsync, db *sqlx.DB, nc *nats.Conn) *Downloads {
 	return &Downloads{
-		rs:         rs,
-		mutexes:    make(map[string]*redsync.Mutex),
-		guardMutex: &sync.Mutex{},
-		db:         db,
-		nc:         nc,
+		rs:              rs,
+		mutexes:         make(map[string]*redsync.Mutex),
+		guardMutex:      &sync.Mutex{},
+		db:              db,
+		nc:              nc,
+		activeCmds:      make(map[string]*exec.Cmd),
+		guardActiveCmds: &sync.Mutex{},
+		performers:      make(chan string, 1),
 	}
 }
 
+// Start runs new download by name
 func (d *Downloads) Start(name string) {
+	for {
+		select {
+		case performer := <-d.performers:
+			go d.start(performer)
+		}
+	}
+}
+
+func (d *Downloads) start(name string) {
 	d.guardMutex.Lock()
 	if _, ok := d.mutexes[name]; !ok {
 		d.mutexes[name] = d.rs.NewMutex(name, redsync.WithExpiry(36*time.Hour))
@@ -89,6 +110,10 @@ func (d *Downloads) Start(name string) {
 		log.Printf("Error: %v", err)
 		return
 	}
+
+	d.guardActiveCmds.Lock()
+	d.activeCmds[name] = cmd
+	d.guardActiveCmds.Unlock()
 
 	go copyOutput(stdout)
 	go copyOutput(stderr)

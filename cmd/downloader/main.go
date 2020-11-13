@@ -63,7 +63,7 @@ func main() {
 
 		downloadName := eventPerformer.Name
 
-		go dwnl.Start(downloadName)
+		dwnl.Start(downloadName)
 	}); err != nil {
 		log.Fatal(err)
 	}
