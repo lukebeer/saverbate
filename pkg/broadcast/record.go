@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Record is record of broadcast
 type Record struct {
 	ID              int64
 	BroadcasterName string

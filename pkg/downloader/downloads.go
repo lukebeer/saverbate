@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -12,29 +13,28 @@ import (
 
 	"github.com/go-redsync/redsync/v4"
 	"github.com/jmoiron/sqlx"
+	"github.com/nats-io/nats.go"
 )
 
 const (
 	userAgent = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36`
 )
 
-type performer struct {
-	Name string `json:"performer_name"`
-}
-
 type Downloads struct {
 	rs         *redsync.Redsync
 	mutexes    map[string]*redsync.Mutex
 	guardMutex *sync.Mutex
 	db         *sqlx.DB
+	nc         *nats.Conn
 }
 
-func New(rs *redsync.Redsync, db *sqlx.DB) *Downloads {
+func New(rs *redsync.Redsync, db *sqlx.DB, nc *nats.Conn) *Downloads {
 	return &Downloads{
 		rs:         rs,
 		mutexes:    make(map[string]*redsync.Mutex),
 		guardMutex: &sync.Mutex{},
 		db:         db,
+		nc:         nc,
 	}
 }
 
@@ -97,6 +97,15 @@ func (d *Downloads) Start(name string) {
 	if err := r.Finish(d.db); err != nil {
 		log.Printf("ERROR: %v", err)
 		return
+	}
+
+	message, err := json.Marshal(r)
+	if err != nil {
+		log.Printf("ERROR: %v", err)
+		return
+	}
+	if err := d.nc.Publish("download_complete", message); err != nil {
+		log.Printf("ERROR: %v", err)
 	}
 }
 

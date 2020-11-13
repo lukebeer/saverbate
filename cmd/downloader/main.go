@@ -52,7 +52,7 @@ func main() {
 	}
 
 	// Initialize downloads
-	dwnl := downloader.New(rs, db)
+	dwnl := downloader.New(rs, db, nc)
 
 	// Subscribe
 	if _, err := nc.QueueSubscribe("downloading", "download", func(m *nats.Msg) {

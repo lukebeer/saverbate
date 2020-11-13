@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
+	"saverbate/pkg/broadcast"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -196,11 +197,8 @@ func (ctx *Context) CheckEmail() error {
 			continue
 		}
 
-		message, err := json.Marshal(struct {
-			Name string `json:"performer_name"`
-		}{
-			Name: name[1],
-		})
+		r := broadcast.Record{BroadcasterName: name[1]}
+		message, err := json.Marshal(r)
 		if err != nil {
 			return err
 		}
