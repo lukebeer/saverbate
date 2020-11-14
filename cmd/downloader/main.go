@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"saverbate/pkg/broadcast"
 	"saverbate/pkg/downloader"
 	"syscall"
 
@@ -20,13 +21,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type performer struct {
-	Name string `json:"performer_name"`
-}
-
 func main() {
-	var eventPerformer performer
-
 	flag.String("dbconn", "postgres://postgres:qwerty@saverbate-db:5432/saverbate_records?sslmode=disable", "Database connection string")
 	flag.String("natsAddress", "nats://saverbate-nats:4222", "Address to connect to NATS server")
 	flag.String("redisAddress", "saverbate-redis:6379", "Address to redis server")
@@ -51,20 +46,23 @@ func main() {
 		log.Panic(err)
 	}
 
-	// Initialize downloads
+	// Run main loop of downloads
 	dwnl := downloader.New(rs, db, nc)
+	go dwnl.Run()
 
 	// Subscribe
-	if _, err := nc.QueueSubscribe("downloading", "download", func(m *nats.Msg) {
-		if err := json.Unmarshal(m.Data, &eventPerformer); err != nil {
+	subscribtion, err := nc.QueueSubscribe("downloading", "download", func(m *nats.Msg) {
+		record := &broadcast.Record{}
+		if err := json.Unmarshal(m.Data, record); err != nil {
 			log.Printf("Unmarshal error: %v", err)
 			return
 		}
 
-		downloadName := eventPerformer.Name
+		downloadName := record.BroadcasterName
 
 		dwnl.Start(downloadName)
-	}); err != nil {
+	})
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -74,6 +72,15 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-signalChan
 
-	nc.Drain()
+	if err := subscribtion.Unsubscribe(); err != nil {
+		log.Printf("ERROR: drain subscription failed: %v", err)
+	}
+
+	<-dwnl.Close()
+
+	if err := nc.Drain(); err != nil {
+		log.Printf("ERROR: drain NATS connections failed: %v", err)
+	}
+
 	db.Close()
 }
