@@ -86,6 +86,16 @@ func (d *Downloads) start(name string) {
 		return
 	}
 
+	defer func() {
+		if ok, err := d.mutexes[name].Unlock(); !ok || err != nil {
+			log.Printf("Could not release crawler lock: %v", err)
+			return
+		}
+		d.guardMutex.Lock()
+		delete(d.mutexes, name)
+		d.guardMutex.Unlock()
+	}()
+
 	r, err := broadcast.NewRecord(d.db, name)
 	if err != nil {
 		log.Printf("ERROR: failed to save record %v", err)
@@ -100,7 +110,7 @@ func (d *Downloads) start(name string) {
 		"--no-call-home",
 		"--no-progress",
 		"--user-agent", userAgent,
-		"-f", "bestvideo[filesize<3G][height<=?720]+bestaudio/best",
+		"-f", "best[height<=720]",
 		"--output", "/app/downloads/"+name+"/"+r.UUID+".%(ext)s",
 		"https://chaturbate.com/"+name+"/",
 	)
@@ -125,6 +135,12 @@ func (d *Downloads) start(name string) {
 	d.activeCmds[name] = cmd
 	d.guardActiveCmds.Unlock()
 
+	defer func() {
+		d.guardActiveCmds.Lock()
+		delete(d.activeCmds, r.BroadcasterName)
+		d.guardActiveCmds.Unlock()
+	}()
+
 	go copyOutput(stdout)
 	go copyOutput(stderr)
 	if err := cmd.Wait(); err != nil {
@@ -144,14 +160,6 @@ func copyOutput(r io.Reader) {
 func (d *Downloads) finishDownload(r *broadcast.Record) {
 	log.Printf("DEBUG: finish download for %s", r.BroadcasterName)
 
-	if ok, err := d.mutexes[r.BroadcasterName].Unlock(); !ok || err != nil {
-		log.Printf("Could not release crawler lock: %v", err)
-		return
-	}
-	d.guardMutex.Lock()
-	delete(d.mutexes, r.BroadcasterName)
-	d.guardMutex.Unlock()
-
 	if err := r.Finish(d.db); err != nil {
 		log.Printf("ERROR: %v", err)
 		return
@@ -167,11 +175,7 @@ func (d *Downloads) finishDownload(r *broadcast.Record) {
 		return
 	}
 
-	d.guardActiveCmds.Lock()
-	delete(d.activeCmds, r.BroadcasterName)
-	d.guardActiveCmds.Unlock()
-
-	log.Printf("DEBUG: downlad finished for %s", r.BroadcasterName)
+	log.Printf("DEBUG: download finished for %s", r.BroadcasterName)
 }
 
 // Close closes all current downloads
@@ -182,6 +186,7 @@ func (d *Downloads) Close() chan struct{} {
 }
 
 func (d *Downloads) close() {
+	log.Println("DEBUG: Gracefullt shutdown...")
 	close(d.performers)
 	close(d.quit)
 
@@ -193,9 +198,11 @@ func (d *Downloads) close() {
 	}
 
 	// Wait for all
-	for l := len(d.activeCmds); l > 0; {
-		log.Printf("INFO: wait for finish %d active commands", l)
+	log.Println("DEBUG: wait for finish all active records...")
+	for len(d.activeCmds) > 0 {
+		log.Printf("INFO: wait for finish %d active commands", len(d.activeCmds))
 		time.Sleep(1 * time.Second)
 	}
+	log.Println("DEBUG: closed...")
 	close(d.done)
 }
