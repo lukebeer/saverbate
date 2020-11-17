@@ -136,6 +136,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-downloader
+      args:
+        SERVICE_NAME: downloader
     environment:
       POSTGRES_USER: ${SAVERBATE_POSTGRES_USER}
       POSTGRES_PASSWORD: ${SAVERBATE_POSTGRES_PASSWORD}
@@ -146,10 +148,34 @@ services:
     depends_on:
       - saverbate-db
       - saverbate-nats
+      - saverbate-redis
     restart: "unless-stopped"
     command: /app/service --natsAddress nats://saverbate-nats:4222
     volumes:
       - ./downloads:/app/downloads
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
+  saverbate-thumbnails:
+    build:
+      context: .
+      dockerfile: Dockerfile-downloader
+      args:
+        SERVICE_NAME: thumbnails
+    networks:
+      - default
+      - backend
+    depends_on:
+      - saverbate-nats
+      - saverbate-redis
+    restart: "unless-stopped"
+    command: /app/service --natsAddress nats://saverbate-nats:4222
+    volumes:
+      - ./downloads:/app/downloads
+      - ./scripts/thumbnail.sh:/usr/local/bin/thumbnail.sh:ro
     logging:
       driver: "json-file"
       options:

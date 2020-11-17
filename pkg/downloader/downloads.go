@@ -1,14 +1,12 @@
 package downloader
 
 import (
-	"bufio"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
 	"saverbate/pkg/broadcast"
+	"saverbate/pkg/utils"
 	"sync"
 	"time"
 
@@ -88,7 +86,7 @@ func (d *Downloads) start(name string) {
 
 	defer func() {
 		if ok, err := d.mutexes[name].Unlock(); !ok || err != nil {
-			log.Printf("Could not release crawler lock: %v", err)
+			log.Printf("Could not release lock: %v", err)
 			return
 		}
 		d.guardMutex.Lock()
@@ -141,20 +139,13 @@ func (d *Downloads) start(name string) {
 		d.guardActiveCmds.Unlock()
 	}()
 
-	go copyOutput(stdout)
-	go copyOutput(stderr)
+	go utils.CopyOutput(stdout)
+	go utils.CopyOutput(stderr)
 	if err := cmd.Wait(); err != nil {
 		log.Printf("ERROR: error execute command: %v, name: %s", err, name)
 		return
 	}
 	d.finishDownload(r)
-}
-
-func copyOutput(r io.Reader) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		fmt.Println(scanner.Text())
-	}
 }
 
 func (d *Downloads) finishDownload(r *broadcast.Record) {
