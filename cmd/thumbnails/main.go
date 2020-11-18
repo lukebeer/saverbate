@@ -8,8 +8,9 @@ import (
 	"syscall"
 
 	goredislib "github.com/go-redis/redis/v8"
-	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
+
+	"github.com/go-redsync/redsync/v4"
 
 	"github.com/nats-io/nats.go"
 	flag "github.com/spf13/pflag"
@@ -43,7 +44,6 @@ func main() {
 
 	// Wait for a signal to quit:
 	signalChan := make(chan os.Signal, 1)
-	// SIGTERM is called when Ctrl+C was pressed
 	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-signalChan
 

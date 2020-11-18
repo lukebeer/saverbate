@@ -166,6 +166,11 @@ func (d *Downloads) finishDownload(r *broadcast.Record) {
 		return
 	}
 
+	if err := d.nc.Flush(); err != nil {
+		log.Printf("ERROR: %v", err)
+		return
+	}
+
 	log.Printf("DEBUG: download finished for %s", r.BroadcasterName)
 }
 

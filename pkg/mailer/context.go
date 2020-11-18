@@ -206,6 +206,10 @@ func (ctx *Context) CheckEmail() error {
 		if err := ctx.nc.Publish("downloading", message); err != nil {
 			return err
 		}
+
+		if err := ctx.nc.Flush(); err != nil {
+			return err
+		}
 	}
 
 	return nil

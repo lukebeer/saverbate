@@ -44,8 +44,10 @@ func New(rs *redsync.Redsync, nc *nats.Conn) *Handler {
 
 // Run runs main loop
 func (t *Handler) Run() {
+	log.Println("DEBUG: run main loop")
 	// Subscribe
 	subscribtion, err := t.nc.QueueSubscribe("download_complete", "download", func(m *nats.Msg) {
+		log.Printf("DEBUG: got message: %s", string(m.Data[:]))
 		record := &broadcast.Record{}
 		if err := json.Unmarshal(m.Data, record); err != nil {
 			log.Printf("ERROR: Unmarshal error: %v", err)
@@ -59,6 +61,8 @@ func (t *Handler) Run() {
 	}
 	t.sub = subscribtion
 
+	defer log.Println("DEBUG: stopped main loop")
+
 	for {
 		select {
 		case record := <-t.records:
@@ -68,7 +72,6 @@ func (t *Handler) Run() {
 			return
 		}
 	}
-
 }
 
 // Start starts new task for get thumbnails by uuid

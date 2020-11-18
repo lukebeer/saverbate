@@ -9,7 +9,8 @@ RUN apt-get update -yq && \
   apt-get install -yq \
     tini \
     curl \
-    git
+    git \
+    bc
 
 ENTRYPOINT ["tini", "--"]
 

@@ -10,12 +10,12 @@ import (
 
 // Record is record of broadcast
 type Record struct {
-	ID              int64
-	BroadcasterName string
-	BroadcasterID   int64
-	UUID            string
-	CreatedAt       time.Time
-	FinishAt        time.Time
+	ID              int64     `json:"id,omitempty"`
+	BroadcasterName string    `json:"name"`
+	BroadcasterID   int64     `json:"-"`
+	UUID            string    `json:"uuid"`
+	CreatedAt       time.Time `json:"-"`
+	FinishAt        time.Time `json:"-"`
 }
 
 func NewRecord(db *sqlx.DB, broadcasterName string) (*Record, error) {
