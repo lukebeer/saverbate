@@ -17,3 +17,37 @@ body {
 .site-header .site-logo .star {
   color: #e08524;
 }
+
+.video-thumbnail {
+  width: 266px;
+	display: inline-block;
+	margin: 0px 0px 32px 0px;
+	font-size: 15px;
+}
+
+.video-preview {
+	width: 266px;
+	height: 149px;
+	background-size: 1064px 596px;
+	background-position: 0px -298px;
+	position: relative;
+	border-radius: 3px;
+}
+
+.video-preview:before {
+	display: block;
+	position: absolute;
+	top: 0;
+	height: 100%;
+	width: 100%;
+	content: '';
+	background: linear-gradient(to top,#0008 0%,#0000 24%);
+}
+
+.video-preview:hover {
+	animation: splash-play-x 1.6s steps(4) infinite, splash-play-y 6.4s steps(4) infinite;
+}
+
+.video-preview:hover:before {
+	display: none;
+}

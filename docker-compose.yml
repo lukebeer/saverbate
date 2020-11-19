@@ -265,6 +265,27 @@ services:
         max-size: "1m"
         max-file: "2"
 
+  saverbate-imgproxy:
+    image: darthsim/imgproxy:latest
+    restart: "unless-stopped"
+    volumes:
+      - ./downloads:/static
+    expose:
+      - "80"
+    networks:
+      - frontend
+    environment:
+      - IMGPROXY_BIND=:80
+      - IMGPROXY_QUALITY=98
+      - VIRTUAL_HOST=imgproxy.saverbate.localhost
+      - VIRTUAL_PATH=/
+      - IMGPROXY_LOCAL_FILESYSTEM_ROOT=/static
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "2"
+
 volumes:
   pg-data:
     driver: local

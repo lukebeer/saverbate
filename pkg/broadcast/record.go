@@ -10,12 +10,12 @@ import (
 
 // Record is record of broadcast
 type Record struct {
-	ID              int64     `json:"id,omitempty"`
-	BroadcasterName string    `json:"name"`
-	BroadcasterID   int64     `json:"-"`
-	UUID            string    `json:"uuid"`
-	CreatedAt       time.Time `json:"-"`
-	FinishAt        time.Time `json:"-"`
+	ID              int64     `json:"id,omitempty" db:"id"`
+	BroadcasterName string    `json:"name" db:"broadcaster_name"`
+	BroadcasterID   int64     `json:"-" db:"broadcaster_id"`
+	UUID            string    `json:"uuid" db:"uuid"`
+	CreatedAt       time.Time `json:"-" db:"created_at"`
+	FinishAt        time.Time `json:"-" db:"finish_at"`
 }
 
 func NewRecord(db *sqlx.DB, broadcasterName string) (*Record, error) {
@@ -69,4 +69,37 @@ func (r *Record) Finish(db *sqlx.DB) error {
 		return err
 	}
 	return nil
+}
+
+func FeaturedRecords(db *sqlx.DB) ([]*Record, error) {
+	r := []*Record{}
+
+	err := db.Select(
+		&r, `
+		SELECT
+			x.id,
+			x.broadcaster_id,
+			x.broadcaster_name,
+			x.created_at,
+			x.finish_at,
+			x.uuid
+		FROM (
+			SELECT
+					r.id AS id,
+					b.id AS broadcaster_id,
+					b.name AS broadcaster_name,
+					b.followers,
+					r.created_at,
+					r.finish_at,
+					r.uuid,
+					row_number() OVER (PARTITION BY b.id ORDER BY r.finish_at DESC) AS n
+				FROM records r INNER JOIN broadcasters b ON b.id = r.broadcaster_id
+				WHERE r.finish_at IS NOT NULL) x
+		WHERE x.n = 1 ORDER BY date_trunc('day', x.finish_at) DESC, x.followers DESC NULLS LAST`,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }

@@ -71,7 +71,7 @@ func main() {
 		middleware.Recoverer,
 	)
 	// Homepage
-	r.Method("GET", "/", handler.NewHomepageHandler())
+	r.Method("GET", "/", handler.NewHomepageHandler(db))
 	// Registration
 	//r.Method("GET", "/register", handler.NewApplicationHandler("register"))
 	// Login

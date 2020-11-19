@@ -10,7 +10,8 @@ RUN apt-get update -yq && \
     tini \
     curl \
     git \
-    bc
+    bc \
+    imagemagick
 
 ENTRYPOINT ["tini", "--"]
 
