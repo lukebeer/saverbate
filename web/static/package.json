@@ -9,6 +9,8 @@
     "build": "webpack --mode production"
   },
   "dependencies": {
+    "@clappr/core": "^0.4.15",
+    "@clappr/plugins": "^0.4.8",
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
     "babel-loader": "^8.1.0",
