@@ -103,3 +103,25 @@ func FeaturedRecords(db *sqlx.DB) ([]*Record, error) {
 
 	return r, nil
 }
+
+// FindByUUID finds record by UUID
+func FindByUUID(db *sqlx.DB, uuid string) (*Record, error) {
+	r := &Record{}
+
+	err := db.Get(r,
+		`SELECT
+			r.id AS id,
+			b.id AS broadcaster_id,
+			b.name AS broadcaster_name,
+			r.created_at,
+			r.finish_at,
+			r.uuid
+		FROM records r INNER JOIN broadcasters b ON b.id = r.broadcaster_id
+		WHERE r.uuid = $1 AND r.finish_at IS NOT NULL LIMIT 1`,
+		uuid,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}

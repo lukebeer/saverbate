@@ -2,12 +2,10 @@ package main
 
 import (
 	"context"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"path"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -24,6 +22,7 @@ import (
 
 	"saverbate/pkg/handler"
 	"saverbate/pkg/user"
+	"saverbate/pkg/utils"
 
 	_ "github.com/lib/pq"
 	_ "github.com/volatiletech/authboss/v3/auth"
@@ -65,13 +64,14 @@ func main() {
 	r.Use(
 		middleware.RealIP,
 		middleware.Logger,
+		middleware.Recoverer,
 		ab.LoadClientStateMiddleware,
 		appMiddleware.CurrentUserDataInject(ab),
 		//appMiddleware.ConfigDataInject(),
-		middleware.Recoverer,
 	)
 	// Homepage
 	r.Method("GET", "/", handler.NewHomepageHandler(db))
+	r.Method("GET", "/records/{uuid}", handler.NewShowHandler(db))
 	// Registration
 	//r.Method("GET", "/register", handler.NewApplicationHandler("register"))
 	// Login
@@ -96,29 +96,21 @@ func main() {
 
 	// Serve static assets
 	// serves files from web/static dir
-	cwd, err := os.Getwd()
+	staticDir, err := utils.StaticDir()
 	if err != nil {
 		log.Fatal(err)
 	}
-	staticPrefix := "/static/"
-	staticDir := path.Join(cwd, "web", staticPrefix)
-	r.Method("GET", staticPrefix+"*", http.StripPrefix(staticPrefix, http.FileServer(http.Dir(staticDir))))
+	r.Method("GET", utils.StaticPrefix+"*", http.StripPrefix(utils.StaticPrefix, http.FileServer(http.Dir(staticDir))))
 
 	// Favicon
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
-		if err := serveStaticFile(staticDir+"/favicon.ico", w); err != nil {
+		if err := utils.ServeStaticFile(staticDir+"/favicon.ico", w); err != nil {
 			log.Println(err)
 		}
 	})
 
 	// Handle 404
-	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-
-		if err := serveStaticFile(staticDir+"/404.html", w); err != nil {
-			log.Println(err)
-		}
-	})
+	r.NotFound(handler.NewNotFoundHandler().ServeHTTP)
 
 	signal.Notify(quit, os.Interrupt)
 
@@ -163,18 +155,4 @@ func main() {
 
 	<-done
 	log.Println("Server stopped")
-}
-
-func serveStaticFile(filePath string, w io.Writer) error {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-
-	buf := make([]byte, 4*1024) // 4Kb
-	if _, err = io.CopyBuffer(w, f, buf); err != nil {
-		return err
-	}
-
-	return nil
 }

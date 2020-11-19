@@ -32,7 +32,7 @@ func (h *HomepageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	records, err := broadcast.FeaturedRecords(h.db)
 	if err != nil {
-		log.Fatalf("ERROR: %v", err)
+		log.Panicf("ERROR: %v", err)
 	}
 
 	data.MergeKV("records", records)

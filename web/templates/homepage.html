@@ -4,11 +4,16 @@
     <div class="col">
       {{range .records}}
       <div class="video-thumbnail">
-          <div class="video-preview" style="background-image: url('http://imgproxy.saverbate.localhost/rs/fit/1280/0/sm/0/plain/local://static/{{.BroadcasterName}}/{{.UUID}}.jpg')"></div>
-          <p>{{.BroadcasterName}}</p>
+          <a href="/records/{{.UUID}}">
+            <div class="video-preview" style="background-image: url('http://imgproxy.saverbate.localhost/rs/fit/1280/0/sm/0/plain/local://static/{{.BroadcasterName}}/{{.UUID}}.jpg')"></div>
+          </a>
+          <a href="/records/{{.UUID}}"><p>{{.BroadcasterName}}</p></a>
       </div>
       {{end}}
     </div>
   </div>
 </div>
+{{end}}
+
+{{define "javascripts"}}
 {{end}}

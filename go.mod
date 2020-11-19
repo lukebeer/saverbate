@@ -6,7 +6,7 @@ require (
 	github.com/chromedp/chromedp v0.5.3 // indirect
 	github.com/emersion/go-imap v1.0.6
 	github.com/emersion/go-message v0.13.0
-	github.com/go-chi/chi v4.1.2+incompatible // indirect
+	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-redis/redis/v8 v8.3.3
 	github.com/go-redsync/redsync/v4 v4.0.3
 	github.com/gocraft/work v0.5.1

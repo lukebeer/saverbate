@@ -182,6 +182,11 @@
   resolved "https://registry.yarnpkg.com/@clappr/core/-/core-0.4.15.tgz#a4d2cf629ca596caea06cc2344c74d2d4968e5c7"
   integrity sha512-x9nuS4Wrk64yzoAeUTKXM47y9zL5ks1jkcWlb5BQfh4zud0yZMOTyrNOyFLLUWPZTgJo14c+huyyCSVaZXcYrQ==
 
+"@clappr/hlsjs-playback@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@clappr/hlsjs-playback/-/hlsjs-playback-0.5.0.tgz#91b8bae659972309c7c1e6182ff6dac6246f89fb"
+  integrity sha512-uAFsa7C6cuIN1TD4SeFq0otEpkakPbWnrnrXQAHA97fHFjUlI79mlulBvgCXmQGtLsLajaY9g8HBimvZ98ppqw==
+
 "@clappr/plugins@^0.4.8":
   version "0.4.8"
   resolved "https://registry.yarnpkg.com/@clappr/plugins/-/plugins-0.4.8.tgz#dec9ed230c0a9f791f2556d726ed04efe6239bc7"

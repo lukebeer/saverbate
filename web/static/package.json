@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@clappr/core": "^0.4.15",
+    "@clappr/hlsjs-playback": "^0.5.0",
     "@clappr/plugins": "^0.4.8",
     "babel": "^6.23.0",
     "babel-cli": "^6.26.0",
