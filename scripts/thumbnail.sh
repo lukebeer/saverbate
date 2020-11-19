@@ -9,7 +9,7 @@ fps=$(echo "$n / $duration" | bc -l)
 offset=$(echo "$duration / $n / 2" | bc -l)
 
 echo "Duration: $duration, fps: $fps, offset: $offset"
-mkdir /app/downloads/$2/tmp
+mkdir -p /app/downloads/$2/tmp
 
 ffmpeg -i $path_to_video -an -ss $offset -f image2 -vf fps=fps=$fps /app/downloads/$2/tmp/thumb%04d.jpg
 montage /app/downloads/$2/tmp/thumb*.jpg -background black -geometry +5+5 -tile 4x4 /app/downloads/$2/tmp/$1.jpg
