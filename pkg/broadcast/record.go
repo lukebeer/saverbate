@@ -16,8 +16,10 @@ type Record struct {
 	UUID            string    `json:"uuid" db:"uuid"`
 	CreatedAt       time.Time `json:"-" db:"created_at"`
 	FinishAt        time.Time `json:"-" db:"finish_at"`
+	Followers       int64     `json:"-" db:"followers"`
 }
 
+// NewRecord creates Record
 func NewRecord(db *sqlx.DB, broadcasterName string) (*Record, error) {
 	r := &Record{
 		UUID:            uuid.New().String(),
@@ -64,6 +66,7 @@ func NewRecord(db *sqlx.DB, broadcasterName string) (*Record, error) {
 	return r, nil
 }
 
+// Finish sets finish_at
 func (r *Record) Finish(db *sqlx.DB) error {
 	if _, err := db.Exec(`UPDATE records SET finish_at = NOW() WHERE id = $1`, r.ID); err != nil {
 		return err
@@ -71,32 +74,45 @@ func (r *Record) Finish(db *sqlx.DB) error {
 	return nil
 }
 
-func FeaturedRecords(db *sqlx.DB) ([]*Record, error) {
+// FeaturedRecords forms list of feaured performers
+func FeaturedRecords(db *sqlx.DB, prev *Record, limit int) ([]*Record, error) {
+	var args []interface{}
+
 	r := []*Record{}
 
-	err := db.Select(
-		&r, `
+	sql := `
 		SELECT
-			x.id,
-			x.broadcaster_id,
-			x.broadcaster_name,
-			x.created_at,
-			x.finish_at,
-			x.uuid
-		FROM (
+			t1.id AS id,
+			t1.broadcaster_id,
+			t1.created_at,
+			t1.finish_at,
+			t1.uuid,
+			b.name AS broadcaster_name,
+			COALESCE(b.followers, 0) AS followers
+		FROM records t1
+		JOIN (
 			SELECT
-					r.id AS id,
-					b.id AS broadcaster_id,
-					b.name AS broadcaster_name,
-					b.followers,
-					r.created_at,
-					r.finish_at,
-					r.uuid,
-					row_number() OVER (PARTITION BY b.id ORDER BY r.finish_at DESC) AS n
-				FROM records r INNER JOIN broadcasters b ON b.id = r.broadcaster_id
-				WHERE r.finish_at IS NOT NULL) x
-		WHERE x.n = 1 ORDER BY date_trunc('day', x.finish_at) DESC, x.followers DESC NULLS LAST`,
-	)
+				r.broadcaster_id AS broadcaster_id,
+				MAX(date_trunc('day', r.finish_at)) AS finish_at
+			FROM records r
+			WHERE r.finish_at IS NOT NULL
+			GROUP BY r.broadcaster_id
+		) t2 ON t1.broadcaster_id = t2.broadcaster_id AND date_trunc('day', t1.finish_at) = t2.finish_at
+		INNER JOIN broadcasters b ON b.id = t1.broadcaster_id `
+
+	args = append(args, limit)
+	if prev != nil {
+		sql += `WHERE (date_trunc('day', t1.finish_at), COALESCE(b.followers, 0), t1.id) < (date_trunc('day', $2::timestamp), $3, $4) `
+		args = append(args, prev.FinishAt, prev.Followers, prev.ID)
+	}
+
+	sql += `ORDER BY
+		date_trunc('day', t1.finish_at) DESC,
+		COALESCE(b.followers, 0) DESC,
+		t1.id DESC
+	LIMIT $1`
+
+	err := db.Select(&r, sql, args...)
 	if err != nil {
 		return nil, err
 	}
