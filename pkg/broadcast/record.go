@@ -93,11 +93,11 @@ func FeaturedRecords(db *sqlx.DB, prev *Record, limit int) ([]*Record, error) {
 		JOIN (
 			SELECT
 				r.broadcaster_id AS broadcaster_id,
-				MAX(date_trunc('day', r.finish_at)) AS finish_at
+				MAX(r.finish_at) AS max_finish_at
 			FROM records r
 			WHERE r.finish_at IS NOT NULL
 			GROUP BY r.broadcaster_id
-		) t2 ON t1.broadcaster_id = t2.broadcaster_id AND date_trunc('day', t1.finish_at) = t2.finish_at
+		) t2 ON t1.broadcaster_id = t2.broadcaster_id AND t1.finish_at = t2.max_finish_at
 		INNER JOIN broadcasters b ON b.id = t1.broadcaster_id `
 
 	args = append(args, limit)
