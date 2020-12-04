@@ -74,10 +74,31 @@ func (r *Record) Finish(db *sqlx.DB) error {
 	return nil
 }
 
-// FeaturedRecords forms list of feaured performers
-func FeaturedRecords(db *sqlx.DB, prev *Record, limit int) ([]*Record, error) {
-	var args []interface{}
+func TotalFeaturedRecords(db *sqlx.DB) (int64, error) {
+	var total int64
 
+	if err := db.Get(
+		&total,
+		`SELECT
+			COUNT(*)
+		FROM records t1
+		JOIN (
+			SELECT
+				r.broadcaster_id AS broadcaster_id,
+				MAX(r.finish_at) AS max_finish_at
+			FROM records r
+			WHERE r.finish_at IS NOT NULL
+			GROUP BY r.broadcaster_id
+		) t2 ON t1.broadcaster_id = t2.broadcaster_id AND t1.finish_at IS NOT NULL AND t1.finish_at = t2.max_finish_at`,
+	); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+// FeaturedRecords forms list of feaured performers
+func FeaturedRecords(db *sqlx.DB, page int64, limit int) ([]*Record, error) {
 	r := []*Record{}
 
 	sql := `
@@ -98,21 +119,10 @@ func FeaturedRecords(db *sqlx.DB, prev *Record, limit int) ([]*Record, error) {
 			WHERE r.finish_at IS NOT NULL
 			GROUP BY r.broadcaster_id
 		) t2 ON t1.broadcaster_id = t2.broadcaster_id AND t1.finish_at = t2.max_finish_at
-		INNER JOIN broadcasters b ON b.id = t1.broadcaster_id `
+		INNER JOIN broadcasters b ON b.id = t1.broadcaster_id
+		ORDER BY date_trunc('day', t1.finish_at) DESC, COALESCE(b.followers, 0) DESC, t1.id DESC LIMIT $1 OFFSET $2`
 
-	args = append(args, limit)
-	if prev != nil {
-		sql += `WHERE (date_trunc('day', t1.finish_at), COALESCE(b.followers, 0), t1.id) < (date_trunc('day', $2::timestamp), $3, $4) `
-		args = append(args, prev.FinishAt, prev.Followers, prev.ID)
-	}
-
-	sql += `ORDER BY
-		date_trunc('day', t1.finish_at) DESC,
-		COALESCE(b.followers, 0) DESC,
-		t1.id DESC
-	LIMIT $1`
-
-	err := db.Select(&r, sql, args...)
+	err := db.Select(&r, sql, limit, (page-1)*int64(limit))
 	if err != nil {
 		return nil, err
 	}
