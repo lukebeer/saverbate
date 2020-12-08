@@ -14,8 +14,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/volatiletech/authboss/v3"
 
-	nats "github.com/nats-io/nats.go"
-
 	appMiddleware "saverbate/pkg/middleware"
 
 	flag "github.com/spf13/pflag"
@@ -38,7 +36,7 @@ func main() {
 	flag.String("sessionStoreKey", "", "Secret key for session storage")
 
 	flag.String("rootURL", "http://localhost:8085", "Root URL")
-	flag.String("natsAddress", "nats://localhost:10222", "Address to connect to NATS server")
+	flag.String("redisAddress", "saverbate-redis:6379", "Address to redis server")
 	flag.Parse()
 
 	viper.BindPFlags(flag.CommandLine)
@@ -54,11 +52,6 @@ func main() {
 		log.Fatalf("Failed to init authbos: %v\n", err)
 	}
 
-	// NATS
-	nc, err := nats.Connect(viper.GetString("natsAddress"), nats.NoEcho())
-	if err != nil {
-		log.Panic(err)
-	}
 	r := chi.NewRouter()
 	// Some basic middlewares
 	r.Use(
@@ -72,19 +65,6 @@ func main() {
 	// Homepage
 	r.Method("GET", "/", handler.NewHomepageHandler(db))
 	r.Method("GET", "/records/{uuid}", handler.NewShowHandler(db))
-	// Registration
-	//r.Method("GET", "/register", handler.NewApplicationHandler("register"))
-	// Login
-	//r.Method("GET", "/login", handler.NewApplicationHandler("login"))
-	// Show
-	//r.Method("GET", "/show", handler.NewApplicationHandler("show"))
-
-	//r.Group(func(r chi.Router) {
-	//	r.Use(ab.LoadClientStateMiddleware, authboss.Middleware2(ab, authboss.RequireFullAuth, authboss.RespondRedirect))
-
-	// Broadcast
-	// r.Method("GET", "/broadcast", handler.NewApplicationHandler("broadcast"))
-	//})
 
 	r.Group(func(r chi.Router) {
 		r.Use(ab.LoadClientStateMiddleware, authboss.ModuleListMiddleware(ab))
@@ -126,9 +106,6 @@ func main() {
 	server.RegisterOnShutdown(func() {
 		log.Println("Close db connection...")
 		db.Close()
-
-		log.Println("Close NATS connection...")
-		nc.Drain()
 
 		close(done)
 	})
