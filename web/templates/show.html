@@ -10,5 +10,10 @@
 {{end}}
 
 {{define "javascripts"}}
+  <script>
+    var cfg = cfg || {
+      broadcaster: "{{.record.BroadcasterName}}/{{.record.UUID}}"
+    };
+  </script>
   <script type="text/javascript" src="/static/dist/show.bundle.js"></script>
 {{end}}
