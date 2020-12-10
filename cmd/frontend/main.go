@@ -34,6 +34,7 @@ func main() {
 
 	flag.String("cookieStoreKey", "", "Secret key for cookies storage")
 	flag.String("sessionStoreKey", "", "Secret key for session storage")
+	flag.Bool("useTLS", false, "Whether use TLS")
 
 	flag.String("rootURL", "http://localhost:8085", "Root URL")
 	flag.String("redisAddress", "saverbate-redis:6379", "Address to redis server")
@@ -82,9 +83,22 @@ func main() {
 	}
 	r.Method("GET", utils.StaticPrefix+"*", http.StripPrefix(utils.StaticPrefix, http.FileServer(http.Dir(staticDir))))
 
-	// Favicon
+	// favicon, robots.txt etc.
+
 	r.Get("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		if err := utils.ServeStaticFile(staticDir+"/favicon.ico", w); err != nil {
+			log.Println(err)
+		}
+	})
+
+	r.Get("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		if err := utils.ServeStaticFile(staticDir+"/robots.txt", w); err != nil {
+			log.Println(err)
+		}
+	})
+
+	r.Get("/site.webmanifest", func(w http.ResponseWriter, r *http.Request) {
+		if err := utils.ServeStaticFile(staticDir+"/site.webmanifest", w); err != nil {
 			log.Println(err)
 		}
 	})

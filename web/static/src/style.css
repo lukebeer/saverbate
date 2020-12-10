@@ -2,6 +2,23 @@ body {
   background-color: #3E182B;
   color: #fff;
 }
+a {
+	color: #FCEA05;
+}
+a:hover {
+	color: #c2b60e;
+}
+.btn-outline-primary {
+	border-color: #FCEA05;
+	color: #FCEA05;
+}
+
+.btn-outline-primary:hover {
+	border-color:  #FCEA05;
+	background-color:  #FCEA05;
+	color: #3E182B;
+}
+
 .site-header {
 	padding-top: 3.5em;
 	padding-bottom: 3.5em;
@@ -35,6 +52,7 @@ body {
 	background-position: 0px -298px;
 	position: relative;
 	border-radius: 3px;
+	margin-bottom: 1.5em;
 }
 
 .video-preview:before {
@@ -48,7 +66,7 @@ body {
 }
 
 .video-preview:hover {
-	animation: splash-play-x 1.2s steps(4) infinite, splash-play-y 6.4s steps(4) infinite;
+	animation: splash-play-x 1.4s steps(4) infinite, splash-play-y 6.4s steps(4) infinite;
 }
 
 .video-preview:hover:before {
@@ -80,6 +98,27 @@ body {
 }
 .age-confirm-dialog h5 {
 	text-align: center;
+}
+
+.form-secondary-links, .form-primary-links {
+	float: left;
+}
+
+.form-secondary-links {
+	padding-left: .5rem;
+	padding-top: .45rem;
+}
+
+form .invalid-feedback {
+	color: #fc7405;
+	display: block;
+}
+
+.navbar .navbar-nav .nav-link {
+	color: #fff;
+}
+.navbar .navbar-nav .nav-link:hover {
+	color: rgb(231, 229, 229);
 }
 
 @keyframes splash-play-x {

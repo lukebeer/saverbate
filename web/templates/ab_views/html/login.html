@@ -1,0 +1,49 @@
+{{define "content"}}
+<div class="container">
+  <div class="row">
+    <div class="col-sm">&nbsp;</div>
+    <div class="col-sm-8">
+      <form action="{{mountpathed "login"}}" method="post">
+        <div class="form-group row">
+          <label for="logEmail" class="col-sm-3 col-form-label">E-mail:</label>
+          <div class="col-sm-9">
+            <input id="logEmail" class="form-control" name="email" type="email" value="{{.primaryIDValue}}" placeholder="E-mail" />
+            {{with .error}}<div class="invalid-feedback">{{.}}</div>{{end}}
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="logPwd" class="col-sm-3 col-form-label">Password:</label>
+          <div class="col-sm-9">
+            <input id="logPwd" class="form-control" name="password" type="password" placeholder="Password" />
+          </div>
+        </div>
+
+        {{with .modules}}{{with .remember}}
+        <div class="form-group row">
+            <label for="logRemember" class="col-sm-3 col-form-label">Remember Me</label>
+            <div class="col-sm-9">
+              <input id="logRemember" type="checkbox" name="rm" value="true" />
+            </div>
+        </div>
+        {{end}}{{end -}}
+
+        <div class="form-group row">
+          <div class="col-sm-12">
+            <button type="submit" class="btn btn-outline-primary form-primary-links">Login</button>
+            <span class="form-secondary-links"> Or {{with .modules}}{{with .register}}<a href="{{mountpathed "register"}}">Register Account</a>{{end}}{{end -}}</span>
+          </div>
+        </div>
+
+        {{with .modules}}{{with .recover}}<br /><a href="{{mountpathed "recover"}}">Recover Account</a>{{end}}{{end -}}
+
+        {{with .csrf_token}}<input type="hidden" name="csrf_token" value="{{.}}" />{{end}}
+      </form>
+    </div>
+    <div class="col-sm">&nbsp;</div>
+  </div>
+</div>
+{{end}}
+
+{{define "javascripts"}}
+{{end}}

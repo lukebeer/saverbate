@@ -28,12 +28,12 @@ func NewSessionStore() *SessionStore {
 
 	cookieStore := abclientstate.NewCookieStorer(cookieStoreKey, nil)
 	cookieStore.HTTPOnly = false
-	cookieStore.Secure = true
+	cookieStore.Secure = viper.GetBool("useTLS")
 
 	sessionStore := abclientstate.NewSessionStorer(sessionCookieName, sessionStoreKey, nil)
 	cstore := sessionStore.Store.(*sessions.CookieStore)
 	cstore.Options.HttpOnly = false
-	cstore.Options.Secure = true
+	cstore.Options.Secure = viper.GetBool("useTLS")
 	cstore.MaxAge(sessionTTL)
 
 	return &SessionStore{CookieStorer: cookieStore, SessionStorer: sessionStore}

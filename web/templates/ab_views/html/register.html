@@ -1,0 +1,66 @@
+{{define "content"}}
+<div class="container">
+  <div class="row">
+    <div class="col-sm">&nbsp;</div>
+    <div class="col-sm-8">
+      <form action="{{mountpathed "register"}}" method="post">
+        <div class="form-group row">
+          {{with .errors}}{{with (index . "")}}{{range .}}<span>{{.}}</span><br />{{end}}{{end}}{{end -}}
+          <label for="regName" class="col-sm-3 col-form-label">Name:</label>
+          <div class="col-sm-9">
+            <input id="regName" class="form-control" name="name" type="text" value="{{with .preserve}}{{with .name}}{{.}}{{end}}{{end}}" placeholder="Name" />
+
+            {{with .errors}}{{range .name}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end -}}
+
+            <small id="passwordHelpInline" class="text-muted">
+              Must be 2-36 characters long.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="regEmail" class="col-sm-3 col-form-label">E-mail:</label>
+          <div class="col-sm-9">
+            <input id="regEmail" class="form-control" name="email" type="email" value="{{with .preserve}}{{with .email}}{{.}}{{end}}{{end}}" placeholder="E-mail" />
+            {{with .errors}}{{range .email}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end -}}
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="regPwd" class="col-sm-3 col-form-label">Password:</label>
+          <div class="col-sm-9">
+            <input id="regPwd" class="form-control" name="password" type="password" placeholder="Password" />
+
+            {{with .errors}}{{range .password}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end -}}
+
+            <small id="passwordHelpInline" class="text-muted">
+              Must be from 8 characters long.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="regConfirmPwd" class="col-sm-3 col-form-label">Confirm Password:</label>
+          <div class="col-sm-9">
+            <input id="regConfirmPwd" class="form-control" name="confirm_password" type="password" placeholder="Confirm Password" />
+            {{with .errors}}{{range .confirm_password}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end -}}
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <div class="col-sm-12">
+            <button type="submit" class="btn btn-outline-primary form-primary-links">Register</button>
+            <span class="form-secondary-links"> Or <a href="/auth/login">Sign in</a></span>
+          </div>
+        </div>
+
+        {{with .csrf_token}}<input type="hidden" name="csrf_token" value="{{.}}" />{{end}}
+      </form>
+    </div>
+    <div class="col-sm">&nbsp;</div>
+  </div>
+</div>
+{{end}}
+
+{{define "javascripts"}}
+{{end}}

@@ -14,7 +14,7 @@ import (
 	"github.com/volatiletech/authboss/v3"
 )
 
-const perPage = 12
+const perPage = 32
 
 // HomepageHandler is common handler for all actions
 type HomepageHandler struct {
@@ -55,7 +55,11 @@ func (h *HomepageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if page > 1 {
-		prevPaginationState = fmt.Sprintf("/?page=%d", page-1)
+		if page == 2 {
+			prevPaginationState = "/"
+		} else {
+			prevPaginationState = fmt.Sprintf("/?page=%d", page-1)
+		}
 	}
 	if page < totalPages {
 		nextPaginationState = fmt.Sprintf("/?page=%d", page+1)

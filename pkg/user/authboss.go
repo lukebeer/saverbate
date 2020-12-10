@@ -2,10 +2,11 @@ package user
 
 import (
 	"regexp"
+	"saverbate/pkg/handler"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/authboss-renderer"
+
 	"github.com/volatiletech/authboss/v3"
 	"github.com/volatiletech/authboss/v3/defaults"
 )
@@ -21,11 +22,11 @@ func InitAuthBoss(db *sqlx.DB) (*authboss.Authboss, error) {
 
 	ab.Config.Storage.Server = NewStorer(db)
 
-	ab.Config.Core.ViewRenderer = abrenderer.NewHTML("/auth", "web/templates/ab_views")
+	ab.Config.Core.ViewRenderer = handler.NewHTML("/auth", "web/templates/ab_views")
 	ab.Config.Modules.RegisterPreserveFields = []string{"email", "name"}
 	ab.Config.Modules.LogoutMethod = "GET"
 
-	defaults.SetCore(&ab.Config, true, true)
+	defaults.SetCore(&ab.Config, false, true)
 
 	emailRule := defaults.Rules{
 		FieldName: "email", Required: true,
@@ -35,16 +36,16 @@ func InitAuthBoss(db *sqlx.DB) (*authboss.Authboss, error) {
 	}
 	passwordRule := defaults.Rules{
 		FieldName: "password", Required: true,
-		MinLength: 4,
+		MinLength: 8,
 	}
 	nameRule := defaults.Rules{
 		FieldName: "name", Required: true,
-		MinLength: 3,
-		MaxLength: 255,
+		MinLength: 2,
+		MaxLength: 36,
 	}
 
 	ab.Config.Core.BodyReader = defaults.HTTPBodyReader{
-		ReadJSON: true,
+		ReadJSON: false,
 		Rulesets: map[string][]defaults.Rules{
 			"register": {emailRule, passwordRule, nameRule},
 			//"recover_end": {passwordRule},
