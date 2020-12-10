@@ -7,7 +7,7 @@
     <meta name="description" content="Free webcam records from chaturbate performers">
     <title>Saverbate - free webcam records</title>
 
-    <link rel="manifest" href="site.webmanifest">
+    <link rel="manifest" href="/site.webmanifest">
 
     <meta name="theme-color" content="#3E182B">
 
@@ -81,6 +81,16 @@
     </div>
   </footer>
 
+  <script type="application/javascript">
+    var cfg = cfg || {
+      staticHost: "{{.static_host_url}}",
+      currentUser: {
+        loggedIn: "{{.loggedin}}" === "true",
+        id: "{{.current_user_id}}",
+        name: "{{.current_user_name}}"
+      }
+    };
+  </script>
   {{template "javascripts" .}}
 </body>
 </html>

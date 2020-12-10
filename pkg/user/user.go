@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	goredislib "github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
+
 	"github.com/volatiletech/authboss/v3"
 )
 
@@ -98,12 +100,13 @@ func (u *User) PutArbitrary(arbitrary map[string]string) {
 
 // Storer represent logic of user storage
 type Storer struct {
-	Db *sqlx.DB
+	Db    *sqlx.DB
+	redis *goredislib.Client
 }
 
 // NewStorer creates storer object with given db connection
-func NewStorer(db *sqlx.DB) *Storer {
-	return &Storer{Db: db}
+func NewStorer(db *sqlx.DB, redis *goredislib.Client) *Storer {
+	return &Storer{Db: db, redis: redis}
 }
 
 // New returns empty User object
@@ -217,4 +220,26 @@ func (s Storer) LoadByConfirmSelector(ctx context.Context, selector string) (aut
 	}
 
 	return u, nil
+}
+
+// AddRememberToken adds remeber token to pid
+func (s Storer) AddRememberToken(ctx context.Context, pid, token string) error {
+	return s.redis.SAdd(ctx, "remember_tokens:"+pid, token).Err()
+}
+
+// UseRememberToken checks given token
+func (s Storer) UseRememberToken(ctx context.Context, pid, token string) error {
+	ok, err := s.redis.SIsMember(ctx, "remember_tokens:"+pid, token).Result()
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return authboss.ErrTokenNotFound
+	}
+	return nil
+}
+
+// DelRememberTokens removes all tokens for the given pid
+func (s Storer) DelRememberTokens(ctx context.Context, pid string) error {
+	return s.redis.Del(ctx, "remember_tokens:"+pid).Err()
 }

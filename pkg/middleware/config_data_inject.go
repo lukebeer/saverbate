@@ -21,7 +21,7 @@ func ConfigDataInject() func(next http.Handler) http.Handler {
 				data = dataIntf.(authboss.HTMLData)
 			}
 
-			data.MergeKV("websockets_url", viper.GetString("websocketsURL"))
+			data.MergeKV("static_host_url", viper.GetString("staticHostURL"))
 
 			r = r.WithContext(context.WithValue(r.Context(), authboss.CTXKeyData, data))
 			next.ServeHTTP(w, r)

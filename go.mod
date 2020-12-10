@@ -13,6 +13,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/sessions v1.2.1
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/justinas/nosurf v1.1.1
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/nats-io/nats.go v1.10.0
 	github.com/pkg/errors v0.8.1

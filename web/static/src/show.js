@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   const player = new Clappr.Player({
-    source: "https://st.saverbate.com/hls/"+cfg.broadcaster+".mp4/master.m3u8",
+    source: cfg.staticHost+"/hls/"+cfg.broadcaster+".mp4/master.m3u8",
     plugins: [HlsjsPlayback, MediaControl, SpinnerThreeBounce],
     width: '100%',
     mute: true,

@@ -18,6 +18,8 @@ import (
 
 	flag "github.com/spf13/pflag"
 
+	goredislib "github.com/go-redis/redis/v8"
+
 	"saverbate/pkg/handler"
 	"saverbate/pkg/user"
 	"saverbate/pkg/utils"
@@ -26,6 +28,7 @@ import (
 	_ "github.com/volatiletech/authboss/v3/auth"
 	_ "github.com/volatiletech/authboss/v3/logout"
 	_ "github.com/volatiletech/authboss/v3/register"
+	"github.com/volatiletech/authboss/v3/remember"
 )
 
 func main() {
@@ -36,11 +39,20 @@ func main() {
 	flag.String("sessionStoreKey", "", "Secret key for session storage")
 	flag.Bool("useTLS", false, "Whether use TLS")
 
+	flag.String("staticHostURL", "http://localhost:8086", "Static server host URL")
 	flag.String("rootURL", "http://localhost:8085", "Root URL")
-	flag.String("redisAddress", "saverbate-redis:6379", "Address to redis server")
+	flag.String("redisAddress", "localhost:6379", "Address to redis server")
 	flag.Parse()
 
 	viper.BindPFlags(flag.CommandLine)
+
+	redis := goredislib.NewClient(&goredislib.Options{
+		Addr: viper.GetString("redisAddress"),
+	})
+	err := redis.Ping(context.Background()).Err()
+	if err != nil {
+		log.Fatalf("Failed to connect to redis server: %v\n", err)
+	}
 
 	db, err := sqlx.Connect("postgres", viper.GetString("dbconn"))
 	if err != nil {
@@ -48,7 +60,7 @@ func main() {
 	}
 
 	var ab *authboss.Authboss
-	ab, err = user.InitAuthBoss(db)
+	ab, err = user.InitAuthBoss(db, redis)
 	if err != nil {
 		log.Fatalf("Failed to init authbos: %v\n", err)
 	}
@@ -58,10 +70,13 @@ func main() {
 	r.Use(
 		middleware.RealIP,
 		middleware.Logger,
-		middleware.Recoverer,
+		appMiddleware.Nosurfing,
+
 		ab.LoadClientStateMiddleware,
 		appMiddleware.CurrentUserDataInject(ab),
-		//appMiddleware.ConfigDataInject(),
+		appMiddleware.ConfigDataInject(),
+		remember.Middleware(ab),
+		middleware.Recoverer,
 	)
 	// Homepage
 	r.Method("GET", "/", handler.NewHomepageHandler(db))

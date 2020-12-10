@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"saverbate/pkg/user"
 
+	"github.com/justinas/nosurf"
 	"github.com/volatiletech/authboss/v3"
 )
 
@@ -39,8 +40,8 @@ func layoutData(w http.ResponseWriter, r **http.Request, ab *authboss.Authboss) 
 		"loggedin":          userInter != nil,
 		"current_user_id":   currentUserID,
 		"current_user_name": currentUserName,
-		//"csrf_token":        nosurf.Token(*r),
-		"flash_success": authboss.FlashSuccess(w, *r),
-		"flash_error":   authboss.FlashError(w, *r),
+		"csrf_token":        nosurf.Token(*r),
+		"flash_success":     authboss.FlashSuccess(w, *r),
+		"flash_error":       authboss.FlashError(w, *r),
 	}
 }
