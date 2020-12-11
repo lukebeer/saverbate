@@ -1,12 +1,14 @@
 package thumbnails
 
 import (
+	"encoding/json"
 	"log"
 	"os/exec"
 	"saverbate/pkg/broadcast"
 	"saverbate/pkg/utils"
 
 	"github.com/go-redsync/redsync/v4"
+	"github.com/nats-io/nats.go"
 )
 
 // Thumbnail is thumbnail of video
@@ -16,7 +18,7 @@ type Thumbnail struct {
 }
 
 // Make makes thumbnails from uuid
-func (t *Thumbnail) Make() {
+func (t *Thumbnail) Make(nc *nats.Conn) {
 	if err := t.mutex.Lock(); err != nil {
 		log.Printf("ERROR: Thumbnail of "+t.record.BroadcasterName+" already run: %v", err)
 		return
@@ -57,4 +59,21 @@ func (t *Thumbnail) Make() {
 		log.Printf("ERROR: error execute command: %v, name: %s", err, t.record.BroadcasterName)
 		return
 	}
+
+	message, err := json.Marshal(t.record)
+	if err != nil {
+		log.Printf("ERROR: %v", err)
+		return
+	}
+	if err := nc.Publish("thumbnails_complete", message); err != nil {
+		log.Printf("ERROR: %v", err)
+		return
+	}
+
+	if err := nc.Flush(); err != nil {
+		log.Printf("ERROR: %v", err)
+		return
+	}
+
+	log.Printf("DEBUG: making thumbnails finished for %s", t.record.BroadcasterName)
 }

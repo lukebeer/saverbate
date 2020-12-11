@@ -39,7 +39,7 @@ func main() {
 	flag.String("sessionStoreKey", "", "Secret key for session storage")
 	flag.Bool("useTLS", false, "Whether use TLS")
 
-	flag.String("staticHostURL", "http://localhost:8086", "Static server host URL")
+	flag.String("staticHostURL", "https://st.saverbate.com", "Static server host URL")
 	flag.String("rootURL", "http://localhost:8085", "Root URL")
 	flag.String("redisAddress", "localhost:6379", "Address to redis server")
 	flag.Parse()

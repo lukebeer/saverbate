@@ -3,6 +3,7 @@ module saverbate
 go 1.15
 
 require (
+	github.com/aws/aws-sdk-go v1.36.6
 	github.com/chromedp/chromedp v0.5.3 // indirect
 	github.com/emersion/go-imap v1.0.6
 	github.com/emersion/go-message v0.13.0
@@ -16,7 +17,7 @@ require (
 	github.com/justinas/nosurf v1.1.1
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/nats-io/nats.go v1.10.0
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v0.9.3
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect

@@ -8,6 +8,7 @@ import (
 	"saverbate/pkg/broadcast"
 	"saverbate/pkg/downloader"
 	"syscall"
+	"time"
 
 	goredislib "github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
@@ -20,6 +21,8 @@ import (
 
 	_ "github.com/lib/pq"
 )
+
+var maxExecutionTime = 2 * time.Hour
 
 func main() {
 	flag.String("dbconn", "postgres://postgres:qwerty@saverbate-db:5432/saverbate_records?sslmode=disable", "Database connection string")

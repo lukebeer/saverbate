@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"os"
@@ -21,9 +22,10 @@ const (
 
 // Downloads handles downloading
 type Downloads struct {
-	rs *redsync.Redsync
-	db *sqlx.DB
-	nc *nats.Conn
+	ctx context.Context
+	rs  *redsync.Redsync
+	db  *sqlx.DB
+	nc  *nats.Conn
 
 	mutexes    map[string]*redsync.Mutex
 	guardMutex *sync.Mutex
@@ -60,7 +62,7 @@ func (d *Downloads) Run() {
 		select {
 		case performer := <-d.performers:
 			go d.start(performer)
-		case _ = <-d.quit:
+		case <-d.quit:
 			d.close()
 			return
 		}
@@ -102,6 +104,8 @@ func (d *Downloads) start(name string) {
 
 	cmd := exec.Command(
 		"youtube-dl",
+		"--socket-timeout", "10",
+		"--retries", "3",
 		"--quiet",
 		"--no-warnings",
 		"--no-color",

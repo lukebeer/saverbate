@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     width: '100%',
     mute: true,
     parentId: "#player",
-    poster: 'http://imgproxy.saverbate.localhost/rs/fit/800/0/sm/0/plain/local://static/'+cfg.broadcaster+'.jpg',
+    poster: 'https://st.saverbate.com/images/performers/'+cfg.broadcaster+'_big.jpg',
     playback: {
       hlsjsConfig: {
         debug: false,

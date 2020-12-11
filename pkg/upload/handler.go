@@ -1,4 +1,4 @@
-package thumbnails
+package upload
 
 import (
 	"encoding/json"
@@ -12,11 +12,11 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// Handler makes thumbnails from videos
+// Handler uploads object to storage
 type Handler struct {
 	rs              *redsync.Redsync
 	nc              *nats.Conn
-	activeCmds      map[string]*Thumbnail
+	activeCmds      map[string]*Upload
 	guardActiveCmds *sync.Mutex
 	sub             *nats.Subscription
 
@@ -32,7 +32,7 @@ func New(rs *redsync.Redsync, nc *nats.Conn) *Handler {
 	h := &Handler{
 		rs:              rs,
 		nc:              nc,
-		activeCmds:      make(map[string]*Thumbnail),
+		activeCmds:      make(map[string]*Upload),
 		guardActiveCmds: &sync.Mutex{},
 		records:         make(chan *broadcast.Record),
 		quit:            make(chan struct{}),
@@ -46,7 +46,7 @@ func New(rs *redsync.Redsync, nc *nats.Conn) *Handler {
 func (t *Handler) Run() {
 	log.Println("DEBUG: run main loop")
 	// Subscribe
-	subscribtion, err := t.nc.QueueSubscribe("download_complete", "download", func(m *nats.Msg) {
+	subscribtion, err := t.nc.QueueSubscribe("thumbnails_complete", "download", func(m *nats.Msg) {
 		log.Printf("DEBUG: got message: %s", string(m.Data[:]))
 		record := &broadcast.Record{}
 		if err := json.Unmarshal(m.Data, record); err != nil {
@@ -76,15 +76,15 @@ func (t *Handler) Run() {
 
 // Start starts new task for get thumbnails by uuid
 func (t *Handler) Start(record *broadcast.Record) {
-	thumbnail := &Thumbnail{
+	u := &Upload{
 		record: record,
-		mutex:  t.rs.NewMutex("thumbnails:locks:"+record.UUID, redsync.WithExpiry(8*time.Hour)),
+		mutex:  t.rs.NewMutex("uploads:locks:"+record.UUID, redsync.WithExpiry(8*time.Hour)),
 	}
 	t.guardActiveCmds.Lock()
-	t.activeCmds[record.UUID] = thumbnail
+	t.activeCmds[record.UUID] = u
 	t.guardActiveCmds.Unlock()
 
-	thumbnail.Make(t.nc)
+	u.Run()
 
 	t.guardActiveCmds.Lock()
 	delete(t.activeCmds, record.UUID)
