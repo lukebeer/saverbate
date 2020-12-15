@@ -1,0 +1,30 @@
+{{define "content"}}
+<div class="container">
+  <div class="row">
+    <div class="col-sm">&nbsp;</div>
+    <div class="col-sm-8">
+      <form action="{{mountpathed "recover"}}" method="post" autocomplete="off">
+        <div class="form-group row">
+          <label for="logEmail" class="col-sm-3 col-form-label">E-mail:</label>
+          <div class="col-sm-9">
+            <input id="logEmail" class="form-control" name="email" type="email" placeholder="E-mail" />
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <div class="col-sm-12">
+            <button type="submit" class="btn btn-outline-primary form-primary-links">Send me password</button>
+            <span class="form-secondary-links"> Or {{with .modules}}{{with .register}}<a href="{{mountpathed "register"}}">Register Account</a>{{end}}{{end -}}</span>
+          </div>
+        </div>
+
+        {{with .csrf_token}}<input type="hidden" name="csrf_token" value="{{.}}" />{{end}}
+      </form>
+    </div>
+    <div class="col-sm">&nbsp;</div>
+  </div>
+</div>
+{{end}}
+
+{{define "javascripts"}}
+{{end}}

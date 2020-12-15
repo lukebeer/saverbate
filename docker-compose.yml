@@ -47,12 +47,14 @@ services:
       - "5432"
     volumes:
       - pg-data:/var/lib/postgresql/data
+      - ./configs/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf:ro
       - ./db/dumps:/docker-entrypoint-initdb.d:ro
     networks:
       - default
       - backend
     depends_on:
       - saverbate-db
+    command: "postgres -c 'config_file=/etc/postgresql/postgresql.conf'"
     logging:
       driver: "json-file"
       options:

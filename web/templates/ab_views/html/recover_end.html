@@ -1,0 +1,45 @@
+{{define "content"}}
+<div class="container">
+  <div class="row">
+    <div class="col-sm">&nbsp;</div>
+    <div class="col-sm-8">
+      <form action="{{mountpathed "recover/end"}}" method="post" autocomplete="off">
+        <div class="form-group row">
+          <label for="regPwd" class="col-sm-3 col-form-label">Password:</label>
+          <div class="col-sm-9">
+            <input id="regPwd" class="form-control" name="password" type="password" placeholder="Password" />
+            {{with .errors}}{{with (index . "")}}{{range .}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end}}{{end -}}
+            {{with .errors}}{{range .password}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end -}}
+
+            <small id="passwordHelpInline" class="text-muted">
+              Must be from 8 characters long.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="regConfirmPwd" class="col-sm-3 col-form-label">Confirm Password:</label>
+          <div class="col-sm-9">
+            <input id="regConfirmPwd" class="form-control" name="confirm_password" type="password" placeholder="Confirm Password" />
+            {{with .errors}}{{range .confirm_password}}<div class="invalid-feedback">{{.}}</div>{{end}}{{end -}}
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <div class="col-sm-12">
+            <button type="submit" class="btn btn-outline-primary form-primary-links">Recover</button>
+            <span class="form-secondary-links"> Or {{with .modules}}{{with .register}}<a href="{{mountpathed "register"}}">Register Account</a>{{end}}{{end -}}</span>
+          </div>
+        </div>
+
+        <input type="hidden" name="token" value="{{.recover_token}}" />
+        {{with .csrf_token}}<input type="hidden" name="csrf_token" value="{{.}}" />{{end}}
+      </form>
+    </div>
+    <div class="col-sm">&nbsp;</div>
+  </div>
+</div>
+{{end}}
+
+{{define "javascripts"}}
+{{end}}

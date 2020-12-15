@@ -14,6 +14,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/sessions v1.2.1
 	github.com/jmoiron/sqlx v1.2.0
+	github.com/jordan-wright/email v4.0.1-0.20200917010138-e1c00e156980+incompatible
 	github.com/justinas/nosurf v1.1.1
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/nats-io/nats.go v1.10.0

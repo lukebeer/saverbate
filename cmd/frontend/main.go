@@ -27,6 +27,7 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/volatiletech/authboss/v3/auth"
 	_ "github.com/volatiletech/authboss/v3/logout"
+	_ "github.com/volatiletech/authboss/v3/recover"
 	_ "github.com/volatiletech/authboss/v3/register"
 	"github.com/volatiletech/authboss/v3/remember"
 )
@@ -42,6 +43,11 @@ func main() {
 	flag.String("staticHostURL", "https://st.saverbate.com", "Static server host URL")
 	flag.String("rootURL", "http://localhost:8085", "Root URL")
 	flag.String("redisAddress", "localhost:6379", "Address to redis server")
+
+	flag.String("smtpPort", "587", "Default smtp port")
+	flag.String("smtpHost", "mail.saverbate.com", "Default smtp host")
+	flag.String("smtpUser", "no-reply@saverbate.com", "Default smtpt user")
+	flag.String("smtpPassword", "", "Smtp password")
 	flag.Parse()
 
 	viper.BindPFlags(flag.CommandLine)

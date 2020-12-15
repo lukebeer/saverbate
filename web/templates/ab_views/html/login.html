@@ -32,10 +32,12 @@
           <div class="col-sm-12">
             <button type="submit" class="btn btn-outline-primary form-primary-links">Login</button>
             <span class="form-secondary-links"> Or {{with .modules}}{{with .register}}<a href="{{mountpathed "register"}}">Register Account</a>{{end}}{{end -}}</span>
+            <br>
+            {{with .modules}}{{with .recover}}<br /><a href="{{mountpathed "recover"}}">Forgot passsword?</a>{{end}}{{end -}}
           </div>
         </div>
 
-        {{with .modules}}{{with .recover}}<br /><a href="{{mountpathed "recover"}}">Recover Account</a>{{end}}{{end -}}
+
 
         {{with .csrf_token}}<input type="hidden" name="csrf_token" value="{{.}}" />{{end}}
       </form>
