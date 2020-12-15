@@ -16,10 +16,6 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-const (
-	userAgent = `Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36`
-)
-
 // Downloads handles downloading
 type Downloads struct {
 	ctx context.Context
@@ -38,22 +34,6 @@ type Downloads struct {
 	// Handle shutdown
 	quit chan struct{}
 	done chan struct{}
-}
-
-// New creates new instance of Downloads
-func New(rs *redsync.Redsync, db *sqlx.DB, nc *nats.Conn) *Downloads {
-	return &Downloads{
-		rs:              rs,
-		db:              db,
-		nc:              nc,
-		mutexes:         make(map[string]*redsync.Mutex),
-		guardMutex:      &sync.Mutex{},
-		activeCmds:      make(map[string]*exec.Cmd),
-		guardActiveCmds: &sync.Mutex{},
-		performers:      make(chan string, 1),
-		quit:            make(chan struct{}),
-		done:            make(chan struct{}),
-	}
 }
 
 // Run runs main loop of downloads

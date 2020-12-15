@@ -1,12 +1,10 @@
 package mailer
 
 import (
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
 	"regexp"
-	"saverbate/pkg/broadcast"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -197,13 +195,7 @@ func (ctx *Context) CheckEmail() error {
 			continue
 		}
 
-		r := broadcast.Record{BroadcasterName: name[1]}
-		message, err := json.Marshal(r)
-		if err != nil {
-			return err
-		}
-
-		if err := ctx.nc.Publish("downloading", message); err != nil {
+		if err := ctx.nc.Publish("downloading", []byte(name[1])); err != nil {
 			return err
 		}
 

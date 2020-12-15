@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
-	"saverbate/pkg/broadcast"
 	"saverbate/pkg/downloader"
 	"syscall"
 	"time"
@@ -50,24 +48,8 @@ func main() {
 	}
 
 	// Run main loop of downloads
-	dwnl := downloader.New(rs, db, nc)
-	go dwnl.Run()
-
-	// Subscribe
-	subscribtion, err := nc.QueueSubscribe("downloading", "download", func(m *nats.Msg) {
-		record := &broadcast.Record{}
-		if err := json.Unmarshal(m.Data, record); err != nil {
-			log.Printf("Unmarshal error: %v", err)
-			return
-		}
-
-		downloadName := record.BroadcasterName
-
-		dwnl.Start(downloadName)
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+	d := downloader.New(rs, db, nc)
+	go d.Run()
 
 	// Wait for a signal to quit:
 	signalChan := make(chan os.Signal, 1)
@@ -75,11 +57,7 @@ func main() {
 	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-signalChan
 
-	if err := subscribtion.Unsubscribe(); err != nil {
-		log.Printf("ERROR: drain subscription failed: %v", err)
-	}
-
-	<-dwnl.Close()
+	<-d.Close()
 
 	if err := nc.Drain(); err != nil {
 		log.Printf("ERROR: drain NATS connections failed: %v", err)

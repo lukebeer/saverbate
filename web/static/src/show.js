@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', function() {
     playback: {
       hlsjsConfig: {
         debug: false,
+        maxBufferSize: 120*1000*1000,
+        manifestLoadingTimeOut: 20000,
+        manifestLoadingMaxRetry: 5,
+        startFragPrefetch: true,
+        manifestLoadingRetryDelay: 2000,
       }
     }
   });
