@@ -1,18 +1,17 @@
 {{define "content"}}
 <div class="container">
   <div class="row no-gutters">
-    {{range .records}}
-    <div class="col-sm">
-      <div class="video-thumbnail">
-        <a href="/records/{{.UUID}}">
-          <div class="video-preview" style="background-image: url('https://st.saverbate.com/images/performers/{{.BroadcasterName}}/{{.UUID}}_big.jpg')">
-            <div class="video-preview-header">Dec 8, 2020 22:12</div>
-            <div class="video-preview-foot">{{.BroadcasterName}}</div>
-          </div>
-        </a>
-      </div>
+    <div class="col-md-12 col-lg-12 align-center">
+      {{range .records}}
+        <div class="video-thumbnail">
+          <div class="video-preview-header">{{.FinishAt.Format "Jan 02, 2006 15:04"}}</div>
+          <a href="/records/{{.UUID}}">
+            <div class="video-preview" style="background-image: url('https://st.saverbate.com/images/performers/{{.BroadcasterName}}/{{.UUID}}_big.jpg')"></div>
+          </a>
+          <div class="video-preview-foot">{{.BroadcasterName}}</div>
+        </div>
+      {{end}}
     </div>
-    {{end}}
   </div>
 
   <div class="row">

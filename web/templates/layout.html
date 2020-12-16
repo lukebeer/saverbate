@@ -12,65 +12,82 @@
     <meta name="theme-color" content="#3E182B">
 
     <link rel="stylesheet" href="/static/dist/main.css">
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS3ZS8LKJF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LS3ZS8LKJF');
+    </script>
 </head>
 <body>
-  <div class="container">
-    {{if .flash_success}}
-    <div class="row">
-      <div class="col">
-        <div class="alert alert-success" role="alert">
-          {{.flash_success}}
+  <div class="content">
+    <div class="container">
+      {{if .flash_success}}
+      <div class="row">
+        <div class="col">
+          <div class="alert alert-success" role="alert">
+            {{.flash_success}}
+          </div>
+        </div>
+      </div>
+      {{end}}
+
+      {{if .flash_error}}
+      <div class="row">
+        <div class="col">
+          <div class="alert alert-danger" role="alert">
+            {{.flash_error}}
+          </div>
+        </div>
+      </div>
+      {{end}}
+
+      <div class="row">
+        <div class="col">
+          <nav class="navbar navbar-expand-lg navbar-light justify-content-between">
+            <a class="navbar-brand">&nbsp;</a>
+            <ul class="navbar-nav">
+              {{if .loggedin}}
+                <li class="nav-item"><a href="#" class="nav-link" rel="nofollow">{{.current_user_name}}</a></li>
+                <li class="nav-item"><a href="/auth/logout" class="nav-link" rel="nofollow">Logout</a></li>
+              {{else}}
+                <li class="nav-item"><a href="/auth/register" class="nav-link" rel="nofollow">Sign up</a></li>
+                <li class="nav-item"><a href="/auth/login" class="nav-link" rel="nofollow">Login</a></li>
+              {{end}}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <div class="site-header">
+            <h1 class="site-logo"><span class="star">✨</span> Saverbate <span class="star">✨</span></h1>
+            <h5 class="site-logo-subtitle">Don't miss the tastiest</h5>
+          </div>
         </div>
       </div>
     </div>
-    {{end}}
-
-    {{if .flash_error}}
-    <div class="row">
-      <div class="col">
-        <div class="alert alert-danger" role="alert">
-          {{.flash_error}}
-        </div>
-      </div>
-    </div>
-    {{end}}
-
-    <div class="row">
-      <div class="col">
-        <nav class="navbar navbar-expand-lg navbar-light justify-content-between">
-          <a class="navbar-brand">&nbsp;</a>
-          <ul class="navbar-nav">
-            {{if .loggedin}}
-              <li class="nav-item"><a href="#" class="nav-link" rel="nofollow">{{.current_user_name}}</a></li>
-              <li class="nav-item"><a href="/auth/logout" class="nav-link" rel="nofollow">Logout</a></li>
-            {{else}}
-              <li class="nav-item"><a href="/auth/register" class="nav-link" rel="nofollow">Sign up</a></li>
-              <li class="nav-item"><a href="/auth/login" class="nav-link" rel="nofollow">Login</a></li>
-            {{end}}
-          </ul>
-        </nav>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <div class="site-header">
-          <h1 class="site-logo"><span class="star">✨</span> Saverbate <span class="star">✨</span></h1>
-          <h5 class="site-logo-subtitle">Don't miss the tastiest</h5>
-        </div>
-      </div>
-    </div>
+    {{template "content" .}}
   </div>
-  {{template "content" .}}
 
   <footer>
     <div class="container">
       <div class="row">
+        <div class="col-3-sm">
+          <a href="//freekassa.ru/">
+            <img src="//www.free-kassa.ru/img/fk_btn/32.png" title="Приём оплаты на сайте картами">
+          </a>
+        </div>
         <div class="col">
           <small>
-            Saverbate — The Chaturbate Archive.
+            Saverbate — The Chaturbate video Archive.
             Chaturbate is an adult website providing live webcam
-            performances by amateur camgirls, camboys and couples typically featuring nudity and sexual activity
+            performances by amateur camgirls, t-girls, camboys and couples typically featuring nudity and sexual activity
             ranging from striptease and dirty talk to masturbation with sex toys.
             "Chaturbate" is a portmanteau of "chat" and "masturbate".
             Saverbate records your favorite live adult webcam broadcasts

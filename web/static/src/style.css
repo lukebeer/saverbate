@@ -1,7 +1,20 @@
+html, body {
+  height: 100%;
+}
+
 body {
   background-color: #3E182B;
-  color: #fff;
+	color: #fff;
+	display: flex;
+  flex-direction: column;
 }
+.content {
+	flex: 1 0 auto;
+}
+footer {
+	flex-shrink: 0;
+}
+
 a {
 	color: #FCEA05;
 }
@@ -40,9 +53,11 @@ a:hover {
 }
 
 .video-thumbnail {
+	display: inline-block;
   width: 266px;
 	margin: 0px auto;
-	font-size: 15px;
+	margin-bottom: 1.5em;
+	position: relative;
 }
 
 .video-preview {
@@ -50,23 +65,11 @@ a:hover {
 	height: 149px;
 	background-size: 1064px 596px;
 	background-position: 0px -298px;
-	position: relative;
 	border-radius: 3px;
-	margin-bottom: 1.5em;
-}
-
-.video-preview:before {
-	display: block;
-	position: absolute;
-	top: 0;
-	height: 100%;
-	width: 100%;
-	content: '';
-	background: linear-gradient(to top,#0008 0%,#0000 24%);
 }
 
 .video-preview:hover {
-	animation: splash-play-x 1.4s steps(4) infinite, splash-play-y 6.4s steps(4) infinite;
+	animation: splash-play-x 1.6s steps(4) infinite, splash-play-y 6.4s steps(4) infinite;
 }
 
 .video-preview:hover:before {
@@ -121,6 +124,14 @@ form .invalid-feedback {
 	color: rgb(231, 229, 229);
 }
 
+.video-preview-header, .video-preview-foot {
+	text-align: left;
+	background-color: black;
+	padding: 2px;
+	font-size: 12px;
+	color: #fff;
+}
+
 @keyframes splash-play-x {
 	from { background-position-x: 0px; }
 	to   { background-position-x: -1064px; }
@@ -130,3 +141,16 @@ form .invalid-feedback {
  from { background-position-y: 0px; }
  to   { background-position-y: -596px; }
 }
+
+@media (min-width: 320px) {
+	.align-center {
+		text-align: center;
+	}
+}
+
+@media (min-width: 768px) {
+	.align-center {
+		text-align: left;
+	}
+}
+
